@@ -1,8 +1,21 @@
-import type { Edge, Node } from '@xyflow/react'
-
 export type NodeKind = 'start' | 'process' | 'decision' | 'end'
-export type FlowNode = Node<{ label: string; kind: NodeKind; color?: string }, 'flowchart'>
-export type FlowDocument = { title: string; nodes: FlowNode[]; edges: Edge[] }
+export type FlowNode = {
+  id: string
+  type: 'flowchart'
+  position: { x: number; y: number }
+  data: { label: string; kind: NodeKind; color?: string }
+}
+export type HandleId = 'top' | 'right' | 'bottom' | 'left'
+export type FlowEdge = {
+  id: string
+  source: string
+  target: string
+  sourceHandle?: HandleId | null
+  targetHandle?: HandleId | null
+  label?: string
+  type?: 'smoothstep' | 'default' | 'straight'
+}
+export type FlowDocument = { title: string; nodes: FlowNode[]; edges: FlowEdge[] }
 
 export const STORAGE_KEY = 'mindflow-flowchart-v1'
 
@@ -12,37 +25,6 @@ const nodeKinds = new Set<unknown>(Object.keys(defaultLabels))
 const handleIds = new Set<unknown>(['top', 'right', 'bottom', 'left'])
 const edgeTypes = new Set<unknown>(['smoothstep', 'default', 'straight'])
 const colorPattern = /^#[\da-f]{6}$/i
-
-const initialDocument: FlowDocument = {
-  title: defaultTitle,
-  nodes: [],
-  edges: [],
-}
-
-export function serializeFlowDocument(doc: FlowDocument): FlowDocument {
-  return {
-    title: doc.title.trim() || defaultTitle,
-    nodes: doc.nodes.map(({ id, position, data }) => ({
-      id,
-      type: 'flowchart',
-      position: { x: position.x, y: position.y },
-      data: {
-        kind: data.kind,
-        label: data.label.trim() ? data.label : defaultLabels[data.kind],
-        ...(data.color === undefined ? {} : { color: data.color }),
-      },
-    })),
-    edges: doc.edges.map(({ id, source, target, sourceHandle, targetHandle, label, type }) => ({
-      id,
-      source,
-      target,
-      ...(sourceHandle === undefined ? {} : { sourceHandle }),
-      ...(targetHandle === undefined ? {} : { targetHandle }),
-      ...(label === undefined ? {} : { label }),
-      type: edgeTypes.has(type) ? type : 'smoothstep',
-    })),
-  }
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -76,14 +58,14 @@ export function parseFlowDocument(input: unknown): FlowDocument {
       position: { x: node.position.x, y: node.position.y },
       data: {
         kind: node.data.kind as NodeKind,
-        label: node.data.label,
+        label: node.data.label.trim() ? node.data.label : defaultLabels[node.data.kind as NodeKind],
         ...(typeof node.data.color === 'string' ? { color: node.data.color } : {}),
       },
     }
   })
 
   const edgeIds = new Set<string>()
-  const edges: Edge[] = input.edges.map((edge: unknown) => {
+  const edges: FlowEdge[] = input.edges.map((edge: unknown) => {
     if (!isRecord(edge) || !hasValidId(edge.id) || edgeIds.has(edge.id)
       || typeof edge.source !== 'string' || !nodeIds.has(edge.source)
       || typeof edge.target !== 'string' || !nodeIds.has(edge.target)
@@ -98,32 +80,16 @@ export function parseFlowDocument(input: unknown): FlowDocument {
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      ...(edge.sourceHandle === undefined ? {} : { sourceHandle: edge.sourceHandle as string | null }),
-      ...(edge.targetHandle === undefined ? {} : { targetHandle: edge.targetHandle as string | null }),
+      ...(edge.sourceHandle === undefined ? {} : { sourceHandle: edge.sourceHandle as HandleId | null }),
+      ...(edge.targetHandle === undefined ? {} : { targetHandle: edge.targetHandle as HandleId | null }),
       ...(typeof edge.label === 'string' ? { label: edge.label } : {}),
-      type: typeof edge.type === 'string' ? edge.type : 'smoothstep',
+      type: typeof edge.type === 'string' ? edge.type as FlowEdge['type'] : 'smoothstep',
     }
   })
 
-  return serializeFlowDocument({ title: typeof input.title === 'string' ? input.title : defaultTitle, nodes, edges })
-}
-
-export function loadFlowDocument(): FlowDocument {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved !== null) {
-      try {
-        return parseFlowDocument(JSON.parse(saved))
-      } catch {
-        try {
-          localStorage.setItem(`${STORAGE_KEY}-recovery`, saved)
-        } catch {
-          // A full or unavailable store must not prevent opening the editor.
-        }
-      }
-    }
-  } catch {
-    // Browser storage can be unavailable even when the editor itself is usable.
+  return {
+    title: typeof input.title === 'string' ? input.title.trim() || defaultTitle : defaultTitle,
+    nodes,
+    edges,
   }
-  return serializeFlowDocument(initialDocument)
 }

@@ -12,6 +12,7 @@ dist
 dist-ssr
 .playwright-cli
 output/playwright
+public/excalidraw/fonts/
 *.local
 
 # Editor directories and files

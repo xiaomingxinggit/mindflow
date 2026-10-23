@@ -4,13 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/prepare-excalidraw-assets.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/prepare-excalidraw-assets.mjs",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@xyflow/react": "^12.12.0",
+    "@excalidraw/excalidraw": "0.18.1",
     "lucide-react": "^1.56.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
