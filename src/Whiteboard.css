@@ -1,12 +1,24 @@
 .whiteboard-shell { position: relative; width: 100%; height: 100dvh; }
+.whiteboard-shell .excalidraw, .excalidraw-tooltip { --ui-font: system-ui, sans-serif; }
+.whiteboard-shell .excalidraw .excalifont,
+.whiteboard-shell .excalidraw .ExcTextField__label,
+.whiteboard-shell .excalidraw .ExcTextField__input input,
+.whiteboard-shell .excalidraw .RadioGroup__choice,
+.whiteboard-shell .excalidraw .ImageExportModal h3,
+.whiteboard-shell .excalidraw .ImageExportModal__settings__setting__label,
+.whiteboard-shell .excalidraw .OverwriteConfirm__Description { font-family: system-ui, sans-serif; }
+.mindflow-extra-tools { display: flex; align-items: center; gap: 8px; }
+.mindflow-style-control { display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 8px; border: 1px solid var(--default-border-color); border-radius: var(--border-radius-md); background: var(--island-bg-color); color: var(--text-primary-color); font-family: system-ui, sans-serif; font-size: 11px; }
+.mindflow-style-control > span { color: var(--text-secondary-color); white-space: nowrap; }
+.mindflow-style-control select { width: 78px; padding: 4px 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
 .mindflow-document { position: absolute; z-index: 2; top: 16px; left: 68px; display: flex; flex-direction: column; justify-content: center; width: 180px; height: 46px; padding: 3px 8px; border-radius: 8px; background: #fffffff0; color: #343446; }
 .mindflow-document input { width: 100%; height: 24px; padding: 2px 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: inherit; font-size: 13px; font-weight: 600; text-overflow: ellipsis; }
 .mindflow-document input:hover { border-color: #e7e5f0; }
 .mindflow-save { color: #8c899b; font-size: 10px; line-height: 16px; }
 .mindflow-save.has-error { color: #d44d63; }
-.mindflow-sticky { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 0 11px; border: 1px solid var(--default-border-color); border-radius: var(--border-radius-md); background: var(--island-bg-color); color: var(--text-primary-color); font: inherit; font-size: 12px; }
+.mindflow-sticky { display: flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 0 11px; border: 1px solid var(--default-border-color); border-radius: var(--border-radius-md); background: var(--island-bg-color); color: var(--text-primary-color); font: inherit; font-size: 12px; white-space: nowrap; }
 .mindflow-sticky:hover { background: var(--button-hover-bg); }
-.mindflow-logo { color: var(--text-primary-color); font-family: 'Segoe UI', sans-serif; font-size: 42px; font-weight: 700; letter-spacing: -2px; }
+.mindflow-logo { color: var(--text-primary-color); font-family: system-ui, sans-serif; font-size: 42px; font-weight: 700; letter-spacing: -2px; }
 .mindflow-logo > span { color: #8460d8; }
 .mindflow-credit { color: var(--text-secondary-color); font-size: 10px; }
 .mindflow-notice { position: absolute; z-index: 6; bottom: 78px; left: 50%; display: flex; align-items: center; gap: 12px; max-width: min(620px, calc(100% - 32px)); padding: 11px 16px; transform: translateX(-50%); border: 1px solid #d9d6e6; border-radius: 8px; background: #fff; color: #625774; box-shadow: 0 3px 16px #32234812; font-size: 12px; }
@@ -17,3 +29,4 @@
 .whiteboard-shell.is-zen .mindflow-document { display: none; }
 @media (max-width: 1150px) { .mindflow-document { width: 150px; } }
 @media (max-width: 900px) { .mindflow-document { top: 68px; left: 16px; width: 180px; } }
+@media (max-width: 1150px) { .mindflow-style-control > span { display: none; } }

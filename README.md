@@ -51,9 +51,20 @@ npm run preview # 预览生产构建
 | Ctrl / Cmd + / | 打开命令面板 |
 | Escape | 结束当前操作 |
 
+## 画布风格
+
+右上角“画布风格”提供两个选项，文件菜单和命令面板也可切换：
+
+- **现代风格**为默认选项，使用规整圆角、浅色实心节点、细描边和清晰文字。
+- **系统风格**使用 Excalidraw 的手绘轮廓与斜线填充。两种风格均默认使用操作系统无衬线字体，新建普通文字默认 18px，便签保留暖色。
+
+切换会统一当前画布全部元素的样式，并设置后续绘制的默认值；已有文字内容、字号、连接关系、分组和图片保留，文字会重新测量以适应字体。画布有内容时，一次切换可整步撤销 / 重做，风格选择与新建默认值随之恢复。空画布上的切换只改变默认偏好，没有文档元素变化，因此原生撤销不会恢复这次空画布切换。
+
+切换后仍可在原生属性面板手动修改颜色、字体等属性，应用不会持续覆盖手动修改。风格选择和绘图偏好会随当前文档本地保存，新建画布沿用当前选择。打开原生文件保留文件中的元素样式；需要统一外观时再切换画布风格。首次恢复没有风格记录的旧白板时，会统一为现代风格。
+
 ## 保存与备份
 
-左上角可以编辑文档名，并查看“保存中 / 已保存 / 保存失败”状态。场景、图片、名称、主题和视口自动保存到当前浏览器的 IndexedDB；素材库也在本地保存。刷新后恢复当前文档。撤销历史由原生编辑器管理，只在当前页面会话内保留。
+左上角可以编辑文档名，并查看“保存中 / 已保存 / 保存失败”状态。场景、图片、名称、主题、视口、画布风格和绘图偏好自动保存到当前浏览器的 IndexedDB；素材库也在本地保存。刷新后恢复当前文档。撤销历史由原生编辑器管理，只在当前页面会话内保留。
 
 通过原生文件菜单保存 `.excalidraw` 文件作为备份，之后用“打开”恢复；也可在命令面板搜索“下载画布文件”直接下载，或搜索“打开原生画布文件”选择备份。导出图片支持 PNG、SVG 和复制为图片。便签、绑定文字、连线与图片都包含在原生文件中。保存失败时仍可使用文件导出。
 
@@ -65,18 +76,23 @@ npm run preview # 预览生产构建
 
 ## 开发说明
 
-原生编辑核心负责绘制、选择、样式、视图、素材库和历史；应用只负责本地工作区、便签、旧数据转换和资源路径。改造范围与验收依据见 [实施方案](docs/canvas-redesign-plan.md)。
+原生编辑核心负责绘制、选择、属性编辑、视图、素材库和历史；应用负责本地工作区、风格预设、便签、旧数据转换和资源路径。改造范围见 [白板实施方案](docs/canvas-redesign-plan.md)，风格设计与本轮验证见 [画布风格选项](docs/visual-styles.md)。
+
+`src/systemFont.ts` 为锁定的 Excalidraw 0.18.1 适配字体槽位 2，将 canvas、就地编辑和导出使用的字体名称解析为 `system-ui`；保留 `FONT_FAMILY.Helvetica === 2`，不修改依赖包文件。升级编辑器时需重新核对字体解析及文字测量行为。
 
 ```text
 src/App.tsx                          单白板入口
 src/Whiteboard.tsx / Whiteboard.css  原生编辑器与轻量工作区界面
 src/CommandPalette.tsx / .css        本地命令搜索面板
+src/visualStyles.ts                  风格默认值、元素样式和局部文字重测
+src/systemFont.ts                    Excalidraw 0.18.1 系统字体适配
 src/whiteboardStorage.ts             IndexedDB 场景、图片、偏好与素材库保存
 src/legacyFlowchart.ts               旧版节点、文字与连线转换
 src/flowchart.ts                     旧版 JSON 类型和必要校验
 src/index.css                       全局基础样式
 scripts/prepare-excalidraw-assets.mjs 本地字体资源准备
 docs/canvas-redesign-plan.md         改造范围、取舍与验收记录
+docs/visual-styles.md                画布风格设计、实现和验证记录
 ```
 
 Excalidraw 的 MIT 许可与版权声明随项目保留在 [excalidraw-LICENSE.txt](public/excalidraw-LICENSE.txt)，上游项目见 [Excalidraw 官方仓库](https://github.com/excalidraw/excalidraw)。

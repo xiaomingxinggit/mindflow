@@ -7,6 +7,7 @@ import type {
   ExcalidrawInitialDataState,
   LibraryItems,
 } from '@excalidraw/excalidraw/types'
+import type { CanvasStyle } from './visualStyles'
 
 const DATABASE_NAME = 'mindflow-whiteboard-v1'
 const STORE_NAME = 'workspace'
@@ -25,7 +26,21 @@ type ScenePreferences = Pick<
   | 'viewBackgroundColor'
   | 'objectsSnapModeEnabled'
   | 'zenModeEnabled'
->
+  | 'currentItemStrokeColor'
+  | 'currentItemBackgroundColor'
+  | 'currentItemFillStyle'
+  | 'currentItemStrokeWidth'
+  | 'currentItemStrokeStyle'
+  | 'currentItemRoughness'
+  | 'currentItemOpacity'
+  | 'currentItemFontFamily'
+  | 'currentItemFontSize'
+  | 'currentItemTextAlign'
+  | 'currentItemStartArrowhead'
+  | 'currentItemEndArrowhead'
+  | 'currentItemRoundness'
+  | 'currentItemArrowType'
+> & { canvasStyle?: CanvasStyle }
 
 type StoredScene = {
   data: string
@@ -36,6 +51,7 @@ export type SceneSnapshot = {
   elements: readonly ExcalidrawElement[]
   appState: AppState
   files: BinaryFiles
+  style: CanvasStyle
 }
 
 export type SaveStatus = 'saving' | 'saved' | 'error'
@@ -77,6 +93,7 @@ function writeRecord(key: 'scene' | 'library', value: StoredScene | LibraryItems
 export async function loadWorkspace(): Promise<{
   scene: ExcalidrawInitialDataState | undefined
   libraryItems: LibraryItems
+  style: CanvasStyle | undefined
 }> {
   const database = await openDatabase()
   const records = await new Promise<{
@@ -96,22 +113,25 @@ export async function loadWorkspace(): Promise<{
   })
   const storedScene = records.scene
   let scene: ExcalidrawInitialDataState | undefined
+  let style: CanvasStyle | undefined
   if (storedScene) {
     const parsed: ExportedDataState = JSON.parse(storedScene.data)
+    const { canvasStyle, ...appPreferences } = storedScene.preferences
+    style = canvasStyle
     scene = {
       elements: parsed.elements,
-      appState: { ...parsed.appState, ...storedScene.preferences },
+      appState: { ...parsed.appState, ...appPreferences },
       files: parsed.files,
     }
   }
-  return { scene, libraryItems: records.libraryItems ?? [] }
+  return { scene, libraryItems: records.libraryItems ?? [], style }
 }
 
 export function saveLibraryItems(libraryItems: LibraryItems) {
   return writeRecord('library', libraryItems)
 }
 
-function getPreferences(appState: AppState): ScenePreferences {
+function getPreferences(appState: AppState, style: CanvasStyle): ScenePreferences {
   return {
     name: appState.name,
     theme: appState.theme,
@@ -124,6 +144,21 @@ function getPreferences(appState: AppState): ScenePreferences {
     viewBackgroundColor: appState.viewBackgroundColor,
     objectsSnapModeEnabled: appState.objectsSnapModeEnabled,
     zenModeEnabled: appState.zenModeEnabled,
+    currentItemStrokeColor: appState.currentItemStrokeColor,
+    currentItemBackgroundColor: appState.currentItemBackgroundColor,
+    currentItemFillStyle: appState.currentItemFillStyle,
+    currentItemStrokeWidth: appState.currentItemStrokeWidth,
+    currentItemStrokeStyle: appState.currentItemStrokeStyle,
+    currentItemRoughness: appState.currentItemRoughness,
+    currentItemOpacity: appState.currentItemOpacity,
+    currentItemFontFamily: appState.currentItemFontFamily,
+    currentItemFontSize: appState.currentItemFontSize,
+    currentItemTextAlign: appState.currentItemTextAlign,
+    currentItemStartArrowhead: appState.currentItemStartArrowhead,
+    currentItemEndArrowhead: appState.currentItemEndArrowhead,
+    currentItemRoundness: appState.currentItemRoundness,
+    currentItemArrowType: appState.currentItemArrowType,
+    canvasStyle: style,
   }
 }
 
@@ -154,7 +189,7 @@ export function createSceneSaver(onStatus: (status: SaveStatus, error?: unknown)
       .then(async () => {
         const storedScene: StoredScene = {
           data: serializeAsJSON(snapshot.elements, snapshot.appState, snapshot.files, 'local'),
-          preferences: getPreferences(snapshot.appState),
+          preferences: getPreferences(snapshot.appState, snapshot.style),
         }
         const signature = JSON.stringify(storedScene)
         if (signature !== savedSignature) {
@@ -175,7 +210,7 @@ export function createSceneSaver(onStatus: (status: SaveStatus, error?: unknown)
   return {
     schedule(snapshot: SceneSnapshot) {
       const sceneVersion = getSceneVersion(snapshot.elements)
-      const preferences = JSON.stringify(getPreferences(snapshot.appState))
+      const preferences = JSON.stringify(getPreferences(snapshot.appState, snapshot.style))
       if (
         snapshot.elements === lastElements
         && sceneVersion === lastSceneVersion

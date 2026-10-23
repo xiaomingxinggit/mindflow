@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, loadFromBlob, MainMenu, serializeAsJSON, viewportCoordsToSceneCoords, WelcomeScreen } from '@excalidraw/excalidraw'
+import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, loadFromBlob, MainMenu, newElementWith, serializeAsJSON, viewportCoordsToSceneCoords, WelcomeScreen } from '@excalidraw/excalidraw'
 import type { ExcalidrawInitialDataState, ExcalidrawImperativeAPI, ExcalidrawProps, LibraryItems } from '@excalidraw/excalidraw/types'
 import { FilePlus2, Import, StickyNote } from 'lucide-react'
 import { migrateLegacyDocument, readLegacyDocument } from './legacyFlowchart'
 import { createSceneSaver, loadWorkspace, saveLibraryItems } from './whiteboardStorage'
 import type { SaveStatus } from './whiteboardStorage'
 import CommandPalette from './CommandPalette'
+import { applyVisualStyle, getStyleDefaults, readSceneStyle } from './visualStyles'
+import type { CanvasStyle } from './visualStyles'
 import '@excalidraw/excalidraw/index.css'
 import './Whiteboard.css'
 
-type Workspace = { data: ExcalidrawInitialDataState; canSave: boolean; message: string }
+type Workspace = { data: ExcalidrawInitialDataState; style: CanvasStyle; canSave: boolean; message: string }
 const defaultName = '未命名画布'
 
 function DocumentName({ name, onRename }: { name: string; onRename: (name: string) => void }) {
@@ -20,7 +22,7 @@ function DocumentName({ name, onRename }: { name: string; onRename: (name: strin
   }} />
 }
 
-function Editor({ data, canSave, message }: Workspace) {
+function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
   const api = useRef<ExcalidrawImperativeAPI | null>(null)
   const importInput = useRef<HTMLInputElement>(null)
   const nativeInput = useRef<HTMLInputElement>(null)
@@ -31,6 +33,8 @@ function Editor({ data, canSave, message }: Workspace) {
   const [zen, setZen] = useState(!!data.appState?.zenModeEnabled)
   const [notice, setNotice] = useState(message)
   const [commandsOpen, setCommandsOpen] = useState(false)
+  const [style, setStyle] = useState(initialStyle)
+  const styleRef = useRef(initialStyle)
   const [saver] = useState(() => createSceneSaver(setSceneStatus))
   const status = sceneStatus === 'error' || libraryStatus === 'error' ? 'error' : sceneStatus === 'saving' || libraryStatus === 'saving' ? 'saving' : 'saved'
 
@@ -63,7 +67,16 @@ function Editor({ data, canSave, message }: Workspace) {
     setName(appState.name || defaultName)
     setTheme(appState.theme)
     setZen(appState.zenModeEnabled)
-    if (canSave) saver.schedule({ elements, appState, files })
+    const sceneStyle = readSceneStyle(elements)
+    let nextState = appState
+    if (sceneStyle && sceneStyle !== styleRef.current) {
+      styleRef.current = sceneStyle
+      setStyle(sceneStyle)
+      const defaults = getStyleDefaults(sceneStyle)
+      nextState = { ...appState, ...defaults }
+      api.current?.updateScene({ appState: defaults, captureUpdate: CaptureUpdateAction.NEVER })
+    }
+    if (canSave) saver.schedule({ elements, appState: nextState, files, style: styleRef.current })
   }, [canSave, saver])
   const onLibraryChange = useCallback(async (libraryItems: LibraryItems) => {
     if (!canSave) return
@@ -76,6 +89,20 @@ function Editor({ data, canSave, message }: Workspace) {
       api.current?.setToast({ message: '素材库保存失败，请导出素材库备份', closable: true })
     }
   }, [canSave])
+
+  const changeStyle = useCallback((next: CanvasStyle) => {
+    const editor = api.current
+    if (!editor) return
+    const original = editor.getSceneElementsIncludingDeleted()
+    // Give newly drawn elements a native history baseline before the one-step switch.
+    const baseline = original.map(element => element.customData?.mindflowStyle === styleRef.current ? element : newElementWith(element, {
+      customData: { ...element.customData, mindflowStyle: styleRef.current },
+    }))
+    if (baseline.some((element, index) => element !== original[index])) editor.updateScene({ elements: baseline, captureUpdate: CaptureUpdateAction.NEVER })
+    styleRef.current = next
+    setStyle(next)
+    editor.updateScene({ elements: applyVisualStyle(baseline, next), appState: getStyleDefaults(next), captureUpdate: CaptureUpdateAction.IMMEDIATELY })
+  }, [])
 
   function newCanvas() {
     api.current?.updateScene({ elements: [], appState: { name: defaultName, selectedElementIds: {}, scrollX: 0, scrollY: 0, fileHandle: null }, captureUpdate: CaptureUpdateAction.IMMEDIATELY })
@@ -100,7 +127,7 @@ function Editor({ data, canSave, message }: Workspace) {
     try {
       const scene = await loadFromBlob(file, editor.getAppState(), editor.getSceneElements())
       editor.addFiles(Object.values(scene.files))
-      editor.updateScene({ elements: scene.elements, appState: { ...scene.appState, name: file.name.replace(/\.excalidraw$/i, ''), fileHandle: null }, captureUpdate: CaptureUpdateAction.IMMEDIATELY })
+      editor.updateScene({ elements: scene.elements, appState: { ...scene.appState, ...getStyleDefaults(styleRef.current), name: file.name.replace(/\.excalidraw$/i, ''), fileHandle: null }, captureUpdate: CaptureUpdateAction.IMMEDIATELY })
       editor.scrollToContent(scene.elements, { fitToContent: true })
     } catch {
       editor.setToast({ message: '无法打开这个画布文件，当前内容未改动', closable: true })
@@ -117,11 +144,13 @@ function Editor({ data, canSave, message }: Workspace) {
       type: 'rectangle', x: point.x - 110, y: point.y - 90, width: 220, height: 180,
       backgroundColor: '#fff3bf', strokeColor: '#e6b84c', fillStyle: 'solid', strokeWidth: 1,
       roughness: 0, roundness: { type: 3 },
-      label: { text: '写下一个想法', fontSize: 24, strokeColor: '#5c4813' },
+      customData: { mindflowNote: true },
+      label: { text: '写下一个想法', fontFamily: 2, fontSize: 24, strokeColor: '#5c4813' },
     }])
+    const styledNote = applyVisualStyle(note, styleRef.current)
     editor.updateScene({
-      elements: [...editor.getSceneElements(), ...note],
-      appState: { selectedElementIds: Object.fromEntries(note.map(element => [element.id, true])) },
+      elements: [...editor.getSceneElements(), ...styledNote],
+      appState: { selectedElementIds: Object.fromEntries(styledNote.map(element => [element.id, true])) },
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     })
     editor.setActiveTool({ type: 'selection' })
@@ -132,12 +161,13 @@ function Editor({ data, canSave, message }: Workspace) {
     if (!file || !api.current) return
     try {
       const scene = migrateLegacyDocument(JSON.parse(await file.text()))
+      const elements = applyVisualStyle(scene.elements ?? [], styleRef.current)
       api.current.updateScene({
-        elements: scene.elements,
-        appState: { name: scene.appState?.name || defaultName, selectedElementIds: {}, fileHandle: null },
+        elements,
+        appState: { ...getStyleDefaults(styleRef.current), name: scene.appState?.name || defaultName, selectedElementIds: {}, fileHandle: null },
         captureUpdate: CaptureUpdateAction.IMMEDIATELY,
       })
-      api.current.scrollToContent(scene.elements ?? [], { fitToContent: true })
+      api.current.scrollToContent(elements, { fitToContent: true })
       api.current.setToast({ message: '旧版画布已导入，可撤销恢复' })
     } catch (error) {
       api.current.setToast({ message: error instanceof SyntaxError ? '文件不是有效的 JSON，当前画布未改动' : error instanceof Error ? error.message : '文件读取失败', closable: true })
@@ -145,7 +175,7 @@ function Editor({ data, canSave, message }: Workspace) {
     if (importInput.current) importInput.current.value = ''
   }
 
-  const renderExtraTools = useCallback(() => <button className="mindflow-sticky" aria-label="添加便签" title="添加便签" onClick={addStickyNote}><StickyNote size={17} /><span>便签</span></button>, [])
+  const renderExtraTools = useCallback(() => <div className="mindflow-extra-tools"><label className="mindflow-style-control"><span>画布风格</span><select aria-label="画布风格" value={style} onChange={event => changeStyle(event.target.value as CanvasStyle)}><option value="modern">现代风格</option><option value="system">系统风格</option></select></label><button className="mindflow-sticky" aria-label="添加便签" title="添加便签" onClick={addStickyNote}><StickyNote size={17} /><span>便签</span></button></div>, [style, changeStyle])
   const commands = [
     ...([
       ['selection', '选择工具'], ['hand', '平移工具'], ['rectangle', '矩形'], ['diamond', '菱形'], ['ellipse', '椭圆'],
@@ -160,6 +190,8 @@ function Editor({ data, canSave, message }: Workspace) {
     { id: 'export', label: '导出 PNG / SVG / 剪贴板图片', onSelect: () => api.current?.updateScene({ appState: { openDialog: { name: 'imageExport' } } }) },
     { id: 'theme', label: '切换浅色 / 深色主题', onSelect: () => { if (api.current) api.current.updateScene({ appState: { theme: api.current.getAppState().theme === 'dark' ? 'light' : 'dark' } }) } },
     { id: 'fit', label: '适应全部内容', onSelect: () => api.current?.scrollToContent(undefined, { fitToContent: true }) },
+    { id: 'style-modern', label: '统一为现代风格', onSelect: () => changeStyle('modern') },
+    { id: 'style-system', label: '统一为系统风格', onSelect: () => changeStyle('system') },
   ]
 
   return <div className={`whiteboard-shell${zen ? ' is-zen' : ''}`} data-theme={theme}>
@@ -179,6 +211,8 @@ function Editor({ data, canSave, message }: Workspace) {
         <MainMenu.Separator />
         <MainMenu.DefaultItems.ToggleTheme />
         <MainMenu.DefaultItems.ChangeCanvasBackground />
+        <MainMenu.Separator />
+        <MainMenu.Group title="画布风格"><MainMenu.Item selected={style === 'modern'} onSelect={() => changeStyle('modern')}>现代风格</MainMenu.Item><MainMenu.Item selected={style === 'system'} onSelect={() => changeStyle('system')}>系统风格</MainMenu.Item></MainMenu.Group>
         <MainMenu.ItemCustom><small className="mindflow-credit">Mindflow · Powered by Excalidraw</small></MainMenu.ItemCustom>
       </MainMenu>
       <WelcomeScreen>
@@ -209,17 +243,20 @@ export default function Whiteboard() {
     let cancelled = false
     const load = async () => {
       try {
-        const { scene, libraryItems } = await loadWorkspace()
+        const { scene, libraryItems, style: savedStyle } = await loadWorkspace()
         const migrated = !scene ? readLegacyDocument() : null
+        const style = savedStyle ?? 'modern'
+        const source = scene ?? migrated
         const data: ExcalidrawInitialDataState = {
-          ...scene ?? migrated,
-          appState: { name: defaultName, theme: 'light', ...scene?.appState ?? migrated?.appState },
+          ...source,
+          elements: savedStyle ? source?.elements : applyVisualStyle(source?.elements ?? [], style),
+          appState: { name: defaultName, theme: 'light', ...source?.appState, ...(!savedStyle ? getStyleDefaults(style) : {}) },
           libraryItems,
           scrollToContent: !!migrated,
         }
-        if (!cancelled) setWorkspace({ data, canSave: true, message: migrated ? '已从旧版画布恢复，原始数据保留不变' : '' })
+        if (!cancelled) setWorkspace({ data, style, canSave: true, message: migrated ? '已从旧版画布恢复，原始数据保留不变' : '' })
       } catch {
-        if (!cancelled) setWorkspace({ data: { appState: { name: defaultName } }, canSave: false, message: '本地画布读取失败。为保护原数据，本次编辑不会自动覆盖保存；可以导出文件备份后刷新重试。' })
+        if (!cancelled) setWorkspace({ data: { appState: { name: defaultName, ...getStyleDefaults('modern') } }, style: 'modern', canSave: false, message: '本地画布读取失败。为保护原数据，本次编辑不会自动覆盖保存；可以导出文件备份后刷新重试。' })
       }
     }
     void load()
