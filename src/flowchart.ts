@@ -6,8 +6,8 @@ export type FlowDocument = { title: string; nodes: FlowNode[]; edges: Edge[] }
 
 export const STORAGE_KEY = 'mindflow-flowchart-v1'
 
-const defaultTitle = '我的流程图'
-const defaultLabels: Record<NodeKind, string> = { start: '开始', process: '步骤', decision: '判断', end: '结束' }
+const defaultTitle = '未命名画布'
+const defaultLabels: Record<NodeKind, string> = { start: '起点', process: '新的想法', decision: '待思考的问题', end: '终点' }
 const nodeKinds = new Set<unknown>(Object.keys(defaultLabels))
 const handleIds = new Set<unknown>(['top', 'right', 'bottom', 'left'])
 const edgeTypes = new Set<unknown>(['smoothstep', 'default', 'straight'])
@@ -15,18 +15,8 @@ const colorPattern = /^#[\da-f]{6}$/i
 
 const initialDocument: FlowDocument = {
   title: defaultTitle,
-  nodes: [
-    { id: 'start', type: 'flowchart', position: { x: 300, y: 0 }, data: { kind: 'start', label: '开始' } },
-    { id: 'step', type: 'flowchart', position: { x: 300, y: 125 }, data: { kind: 'process', label: '处理任务' } },
-    { id: 'decision', type: 'flowchart', position: { x: 300, y: 270 }, data: { kind: 'decision', label: '是否完成？' } },
-    { id: 'end', type: 'flowchart', position: { x: 300, y: 465 }, data: { kind: 'end', label: '结束' } },
-  ],
-  edges: [
-    { id: 'start-step', source: 'start', target: 'step', sourceHandle: 'bottom', targetHandle: 'top' },
-    { id: 'step-decision', source: 'step', target: 'decision', sourceHandle: 'bottom', targetHandle: 'top' },
-    { id: 'decision-end', source: 'decision', target: 'end', sourceHandle: 'bottom', targetHandle: 'top', label: '是' },
-    { id: 'decision-step', source: 'decision', target: 'step', sourceHandle: 'right', targetHandle: 'right', label: '否' },
-  ],
+  nodes: [],
+  edges: [],
 }
 
 export function serializeFlowDocument(doc: FlowDocument): FlowDocument {
@@ -38,7 +28,7 @@ export function serializeFlowDocument(doc: FlowDocument): FlowDocument {
       position: { x: position.x, y: position.y },
       data: {
         kind: data.kind,
-        label: data.label.trim() || defaultLabels[data.kind],
+        label: data.label.trim() ? data.label : defaultLabels[data.kind],
         ...(data.color === undefined ? {} : { color: data.color }),
       },
     })),
@@ -64,10 +54,10 @@ function hasValidId(value: unknown): value is string {
 
 export function parseFlowDocument(input: unknown): FlowDocument {
   if (!isRecord(input) || !Array.isArray(input.nodes) || !Array.isArray(input.edges)) {
-    throw new Error('文件需要包含流程图节点和连线。')
+    throw new Error('文件需要包含画布节点和连线。')
   }
   if (input.title !== undefined && typeof input.title !== 'string') {
-    throw new Error('流程图名称格式不正确。')
+    throw new Error('画布名称格式不正确。')
   }
 
   const nodeIds = new Set<string>()

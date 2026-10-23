@@ -12,9 +12,14 @@ function appendSnapshot(history: FlowDocument[], doc: FlowDocument): FlowDocumen
   return [...history, serializeFlowDocument(doc)].slice(-historyLimit)
 }
 
+function documentChanged(previous: FlowDocument, next: FlowDocument): boolean {
+  return JSON.stringify(serializeFlowDocument(previous)) !== JSON.stringify(serializeFlowDocument(next))
+}
+
 export function useFlowchartHistory(initial: FlowDocument) {
   const [state, setState] = useState<HistoryState>(() => ({ doc: initial, past: [], future: [] }))
   const latest = useRef(state)
+  const pendingCheckpoint = useRef<FlowDocument | null>(null)
 
   const update = useCallback((updater: (current: HistoryState) => HistoryState) => {
     const current = latest.current
@@ -27,20 +32,29 @@ export function useFlowchartHistory(initial: FlowDocument) {
   const setDoc = useCallback((updater: DocumentUpdater, mode: UpdateMode = 'record') => {
     update(current => {
       const doc = typeof updater === 'function' ? updater(current.doc) : updater
+      const checkpoint = pendingCheckpoint.current
+      if (mode === 'record') pendingCheckpoint.current = null
       if (doc === current.doc) return current
+      if (mode === 'transient' || !documentChanged(current.doc, doc)) {
+        return { ...current, doc }
+      }
+      pendingCheckpoint.current = null
       return {
         doc,
-        past: mode === 'record' ? appendSnapshot(current.past, current.doc) : current.past,
-        future: mode === 'transient' ? current.future : [],
+        past: mode === 'record'
+          ? appendSnapshot(current.past, current.doc)
+          : checkpoint ? appendSnapshot(current.past, checkpoint) : current.past,
+        future: [],
       }
     })
   }, [update])
 
   const checkpoint = useCallback(() => {
-    update(current => ({ ...current, past: appendSnapshot(current.past, current.doc), future: [] }))
-  }, [update])
+    pendingCheckpoint.current = serializeFlowDocument(latest.current.doc)
+  }, [])
 
   const undo = useCallback(() => {
+    pendingCheckpoint.current = null
     update(current => {
       const doc = current.past.at(-1)
       if (!doc) return current
@@ -53,6 +67,7 @@ export function useFlowchartHistory(initial: FlowDocument) {
   }, [update])
 
   const redo = useCallback(() => {
+    pendingCheckpoint.current = null
     update(current => {
       const doc = current.future.at(-1)
       if (!doc) return current
