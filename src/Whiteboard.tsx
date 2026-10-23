@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, loadFromBlob, MainMenu, newElementWith, serializeAsJSON, viewportCoordsToSceneCoords, WelcomeScreen } from '@excalidraw/excalidraw'
 import type { ExcalidrawInitialDataState, ExcalidrawImperativeAPI, ExcalidrawProps, LibraryItems } from '@excalidraw/excalidraw/types'
+import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
+import type { AppState, BinaryFiles } from '@excalidraw/excalidraw/types'
 import { FilePlus2, Import, StickyNote } from 'lucide-react'
 import { migrateLegacyDocument, readLegacyDocument } from './legacyFlowchart'
 import { createSceneSaver, loadWorkspace, saveLibraryItems } from './whiteboardStorage'
@@ -8,6 +10,10 @@ import type { SaveStatus } from './whiteboardStorage'
 import CommandPalette from './CommandPalette'
 import { applyVisualStyle, getStyleDefaults, readSceneStyle } from './visualStyles'
 import type { CanvasStyle } from './visualStyles'
+import { prepareMarkdownScene } from './richTextModel'
+import { useRichText } from './useRichText'
+import { useQuickConnections } from './QuickConnections'
+import FlowAnimation from './FlowAnimation'
 import '@excalidraw/excalidraw/index.css'
 import './Whiteboard.css'
 
@@ -24,6 +30,10 @@ function DocumentName({ name, onRename }: { name: string; onRename: (name: strin
 
 function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
   const api = useRef<ExcalidrawImperativeAPI | null>(null)
+  const [editorApi, setEditorApi] = useState<ExcalidrawImperativeAPI | null>(null)
+  const [scene, setScene] = useState<{ elements: readonly ExcalidrawElement[]; appState: AppState | null; files: BinaryFiles }>({ elements: data.elements ?? [], appState: null, files: data.files ?? {} })
+  const sceneSignature = useRef('')
+  const registerApi = useCallback((instance: ExcalidrawImperativeAPI) => { api.current = instance; setEditorApi(instance) }, [])
   const importInput = useRef<HTMLInputElement>(null)
   const nativeInput = useRef<HTMLInputElement>(null)
   const [sceneStatus, setSceneStatus] = useState<SaveStatus>('saved')
@@ -37,6 +47,8 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
   const styleRef = useRef(initialStyle)
   const [saver] = useState(() => createSceneSaver(setSceneStatus))
   const status = sceneStatus === 'error' || libraryStatus === 'error' ? 'error' : sceneStatus === 'saving' || libraryStatus === 'saving' ? 'saving' : 'saved'
+  const rich = useRichText({ api: editorApi, ...scene })
+  const quick = useQuickConnections({ api: editorApi, elements: scene.elements, appState: scene.appState, style, disabled: rich.editing, onCreateDraft: rich.beginConnection })
 
   useEffect(() => {
     const flush = () => { void saver.flush() }
@@ -53,7 +65,7 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
   }, [saver])
   useEffect(() => {
     const openCommands = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.code === 'Slash' && !event.isComposing) {
+      if ((event.ctrlKey || event.metaKey) && event.code === 'Slash' && !event.isComposing && !(event.target as HTMLElement).closest('[data-rich-editor]')) {
         event.preventDefault()
         event.stopImmediatePropagation()
         setCommandsOpen(current => !current)
@@ -64,6 +76,11 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
   }, [])
 
   const onChange = useCallback<NonNullable<ExcalidrawProps['onChange']>>((elements, appState, files) => {
+    const signature = JSON.stringify([elements.map(element => [element.id, element.versionNonce]), Object.keys(files), appState.scrollX, appState.scrollY, appState.zoom.value, appState.width, appState.height, appState.offsetLeft, appState.offsetTop, appState.selectedElementIds, appState.activeTool.type, appState.theme])
+    if (signature !== sceneSignature.current) {
+      sceneSignature.current = signature
+      setScene({ elements, appState, files })
+    }
     setName(appState.name || defaultName)
     setTheme(appState.theme)
     setZen(appState.zenModeEnabled)
@@ -127,8 +144,9 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
     try {
       const scene = await loadFromBlob(file, editor.getAppState(), editor.getSceneElements())
       editor.addFiles(Object.values(scene.files))
-      editor.updateScene({ elements: scene.elements, appState: { ...scene.appState, ...getStyleDefaults(styleRef.current), name: file.name.replace(/\.excalidraw$/i, ''), fileHandle: null }, captureUpdate: CaptureUpdateAction.IMMEDIATELY })
-      editor.scrollToContent(scene.elements, { fitToContent: true })
+      const elements = await prepareMarkdownScene(scene.elements, scene.files)
+      editor.updateScene({ elements, appState: { ...scene.appState, ...getStyleDefaults(styleRef.current), name: file.name.replace(/\.excalidraw$/i, ''), fileHandle: null }, captureUpdate: CaptureUpdateAction.IMMEDIATELY })
+      editor.scrollToContent(elements, { fitToContent: true })
     } catch {
       editor.setToast({ message: '无法打开这个画布文件，当前内容未改动', closable: true })
     }
@@ -194,8 +212,8 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
     { id: 'style-system', label: '统一为系统风格', onSelect: () => changeStyle('system') },
   ]
 
-  return <div className={`whiteboard-shell${zen ? ' is-zen' : ''}`} data-theme={theme}>
-    <Excalidraw initialData={data} excalidrawAPI={instance => { api.current = instance }} onChange={onChange} onLibraryChange={onLibraryChange}
+  return <div className={`whiteboard-shell${zen ? ' is-zen' : ''}`} data-theme={theme} onDoubleClickCapture={rich.onDoubleClickCapture} onPointerDownCapture={event => { rich.onPointerDownCapture(event); if (!event.isPropagationStopped()) quick.onPointerDownCapture(event) }} onPointerMoveCapture={quick.onPointerMoveCapture} onPointerLeave={quick.onPointerLeave}>
+    <Excalidraw initialData={data} excalidrawAPI={registerApi} onChange={onChange} onLibraryChange={onLibraryChange}
       langCode="zh-CN" aiEnabled={false} handleKeyboardGlobally renderTopRightUI={renderExtraTools} UIOptions={{ canvasActions: { export: { saveFileToDisk: true } } }}>
       <MainMenu>
         <MainMenu.Item icon={<FilePlus2 size={16} />} onSelect={newCanvas}>新建画布</MainMenu.Item>
@@ -226,6 +244,9 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
         </WelcomeScreen.Center>
       </WelcomeScreen>
     </Excalidraw>
+    <FlowAnimation api={editorApi} elements={scene.elements} appState={scene.appState} />
+    {quick.overlay}
+    {rich.overlay}
     <div className="mindflow-document" onKeyDown={event => event.stopPropagation()}>
       <DocumentName key={name} name={name} onRename={value => api.current?.updateScene({ appState: { name: value }, captureUpdate: CaptureUpdateAction.NEVER })} />
       <span className={`mindflow-save ${!canSave || status === 'error' ? 'has-error' : ''}`} role="status">{!canSave ? '恢复失败，请导出备份' : status === 'error' ? '保存失败，请导出备份' : status === 'saving' ? '保存中…' : '已保存在此浏览器'}</span>
@@ -254,6 +275,7 @@ export default function Whiteboard() {
           libraryItems,
           scrollToContent: !!migrated,
         }
+        data.elements = await prepareMarkdownScene(data.elements ?? [], data.files ?? {})
         if (!cancelled) setWorkspace({ data, style, canSave: true, message: migrated ? '已从旧版画布恢复，原始数据保留不变' : '' })
       } catch {
         if (!cancelled) setWorkspace({ data: { appState: { name: defaultName, ...getStyleDefaults('modern') } }, style: 'modern', canSave: false, message: '本地画布读取失败。为保护原数据，本次编辑不会自动覆盖保存；可以导出文件备份后刷新重试。' })

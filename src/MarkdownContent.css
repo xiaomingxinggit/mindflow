@@ -1,0 +1,30 @@
+.mindflow-markdown-content { box-sizing: border-box; margin: 0; padding: 0; background: transparent; color: #1f2937; font-family: system-ui, sans-serif; font-size: 18px; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; text-align: left; }
+.mindflow-markdown-content > :first-child { margin-top: 0; }
+.mindflow-markdown-content > :last-child { margin-bottom: 0; }
+.mindflow-markdown-content p { margin: 0 0 .6em; }
+.mindflow-markdown-content h1, .mindflow-markdown-content h2, .mindflow-markdown-content h3, .mindflow-markdown-content h4, .mindflow-markdown-content h5, .mindflow-markdown-content h6 { margin: .8em 0 .4em; font-weight: 650; line-height: 1.25; }
+.mindflow-markdown-content h1 { font-size: 1.8em; }
+.mindflow-markdown-content h2 { font-size: 1.5em; }
+.mindflow-markdown-content h3 { font-size: 1.25em; }
+.mindflow-markdown-content h4, .mindflow-markdown-content h5, .mindflow-markdown-content h6 { font-size: 1em; }
+.mindflow-markdown-content a { color: #4f63bd; text-decoration: underline; }
+.mindflow-markdown-content blockquote { margin: .6em 0; padding-left: .8em; border-left: 3px solid #a7b4cc; color: inherit; }
+.mindflow-markdown-content blockquote > :last-child { margin-bottom: 0; }
+.mindflow-markdown-content ul, .mindflow-markdown-content ol { margin: .5em 0; padding-left: 1.5em; }
+.mindflow-markdown-content li { margin: .15em 0; }
+.mindflow-markdown-content li > p { margin-bottom: .25em; }
+.mindflow-markdown-content .task-list-item { list-style: none; }
+.mindflow-markdown-content .task-list-item-checkbox { width: .85em; height: .85em; margin: 0 .4em 0 -1.25em; accent-color: #6474e5; vertical-align: baseline; }
+.mindflow-markdown-content code, .mindflow-markdown-content pre { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; }
+.mindflow-markdown-content code { padding: .12em .25em; border-radius: 3px; background: #8798b21c; font-size: .88em; }
+.mindflow-markdown-content pre { margin: .65em 0; padding: .7em .8em; border: 1px solid #a7b4cc55; border-radius: 5px; background: #8798b214; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mindflow-markdown-content pre code { padding: 0; background: none; }
+.mindflow-markdown-content table { width: 100%; margin: .7em 0; border-collapse: collapse; table-layout: fixed; font-size: .9em; }
+.mindflow-markdown-content th, .mindflow-markdown-content td { padding: .35em .5em; border: 1px solid #a7b4cc; vertical-align: top; overflow-wrap: anywhere; }
+.mindflow-markdown-content th { background: #8798b21c; font-weight: 650; }
+.mindflow-markdown-content hr { margin: .8em 0; border: 0; border-top: 1px solid #a7b4cc; }
+.mindflow-markdown-content img { display: block; max-width: 100%; height: auto; margin: .5em 0; object-fit: contain; }
+.mindflow-markdown-content .mindflow-image-placeholder { display: block; margin: .5em 0; padding: .6em .8em; border: 1px dashed #a7b4cc; border-radius: 4px; color: #6b7280; font-size: .85em; }
+.mindflow-markdown-content .katex { font-size: 1.1em; }
+.mindflow-markdown-content .katex-display { margin: .65em 0; }
+.mindflow-markdown-content .katex-display > .katex { max-width: 100%; }

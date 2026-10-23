@@ -63,7 +63,8 @@ function measureTextLayout(elements: readonly ExcalidrawElement[]): Map<string, 
   const updates = new Map<string, Partial<ExcalidrawElement>>()
   const elementMap = new Map(elements.map(element => [element.id, element]))
   const standalone = elements.filter((element): element is ExcalidrawTextElement =>
-    element.type === 'text' && !element.isDeleted && !element.containerId,
+    element.type === 'text' && !element.isDeleted && !element.containerId
+    && !element.customData?.mindflowMarkdown,
   )
   const measuredStandalone = restoreElements(
     standalone.map(text => ({ ...text, text: text.originalText })),
@@ -77,7 +78,7 @@ function measureTextLayout(elements: readonly ExcalidrawElement[]): Map<string, 
   }
 
   for (const text of elements) {
-    if (text.type !== 'text' || text.isDeleted || !text.containerId) continue
+    if (text.type !== 'text' || text.isDeleted || !text.containerId || text.customData?.mindflowMarkdown) continue
     const container = elementMap.get(text.containerId)
     if (!container || !isTextContainer(container)) continue
     const label = {
