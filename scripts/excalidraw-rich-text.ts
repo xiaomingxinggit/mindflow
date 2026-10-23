@@ -65,16 +65,29 @@ export function excalidrawRichText(): Plugin {
         )
       }
       if (normalized.endsWith('/index.js')) {
-        const code = replaceExactly(source,
+        let code = replaceExactly(source,
           '      const fontFamily = existingTextElement?.fontFamily || this.state.currentItemFontFamily;',
           '      if (globalThis.__mindflowRichText?.edit({ element: existingTextElement, container, sceneX, sceneY })) return;\n      const fontFamily = existingTextElement?.fontFamily || this.state.currentItemFontFamily;')
+        // refresh() rerenders App but StaticCanvas otherwise memoizes the same
+        // scene. A display-only revision invalidates it without touching history.
+        code = replaceExactly(code,
+          '                            visibleElements,\n                            sceneNonce,\n                            selectionNonce: this.state.selectionElement?.versionNonce,',
+          '                            visibleElements,\n                            sceneNonce,\n                            selectionNonce: this.state.selectionElement?.versionNonce,\n                            mindflowRenderRevision: globalThis.__mindflowRichText?.displayRevision() ?? 0,')
+        code = replaceExactly(code,
+          'var areEqual4 = (prevProps, nextProps) => {',
+          'var areEqual4 = (prevProps, nextProps) => {\n  if (prevProps.mindflowRenderRevision !== nextProps.mindflowRenderRevision) return false;')
         return { code, map: null }
       }
       if (!normalized.endsWith(`/${rendererFile}`)) return
       let code = source
+      // Smooth modern vector caches at fractional positions/zoom; keep the
+      // upstream pixel handling for images and hand-drawn/system elements.
+      code = replaceExactly(code,
+        '          !appState?.shouldCacheIgnoreZoom && // angle is 0 -> always disable smoothing',
+        '          !(element.customData?.mindflowStyle !== "system" && element.roughness === 0 && ["rectangle", "diamond", "ellipse", "line", "arrow"].includes(element.type)) &&\n          !appState?.shouldCacheIgnoreZoom && // angle is 0 -> always disable smoothing')
       code = replaceExactly(code,
         'var drawElementOnCanvas = (element, rc, context, renderConfig, appState) => {',
-        'var drawElementOnCanvas = (element, rc, context, renderConfig, appState) => {\n  if (globalThis.__mindflowRichText?.drawCanvas(element, context)) return;')
+        'var drawElementOnCanvas = (element, rc, context, renderConfig, appState) => {\n  if (globalThis.__mindflowRichText?.drawCanvas(element, context, renderConfig.isExporting)) return;')
       code = replaceExactly(code,
         '    imageCrop: isImageElement(element) ? element.crop : null\n  };',
         '    imageCrop: isImageElement(element) ? element.crop : null,\n    mindflowRichRevision: globalThis.__mindflowRichText?.revision(element) ?? 0,\n    mindflowBoundRichRevision: globalThis.__mindflowRichText?.revision(getBoundTextElement(element, elementsMap) || element) ?? 0\n  };')
@@ -96,6 +109,9 @@ export function excalidrawRichText(): Plugin {
       code = replaceExactly(code,
         '  const _files = elements.reduce((acc, element) => {\n    if (isInitializedImageElement(element)) {',
         '  const _files = elements.reduce((acc, element) => {\n    for (const fileId of element.customData?.mindflowMarkdown?.imageFiles || []) {\n      foundFile = true;\n      if (files?.[fileId]) acc[fileId] = files[fileId];\n    }\n    if (isInitializedImageElement(element)) {')
+      code = replaceExactly(code,
+        'var computeBoundTextPosition = (container, boundTextElement, elementsMap) => {',
+        'var computeBoundTextPosition = (container, boundTextElement, elementsMap) => {\n  if (container.type === "rectangle" && container.customData?.mindflowNote && boundTextElement.customData?.mindflowMarkdown) return { x: container.x + 16, y: container.y + 16 };')
       code = replaceExactly(code,
         'var redrawTextBoundingBox = (textElement, container, elementsMap, informMutation = true) => {',
         `var redrawTextBoundingBox = (textElement, container, elementsMap, informMutation = true) => {

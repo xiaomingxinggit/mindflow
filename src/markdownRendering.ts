@@ -13,9 +13,15 @@ import './MarkdownContent.css'
 
 type Token = ReturnType<InstanceType<typeof MarkdownIt>['parse']>[number]
 
-const markdown = new MarkdownIt({ html: true, breaks: true, linkify: true, typographer: false })
+const markdown = new MarkdownIt({ html: true, breaks: false, linkify: true, typographer: false })
   .use(taskLists)
   .use(texmath, { engine: katex, delimiters: ['dollars', 'beg_end'], katexOptions: { throwOnError: false, strict: false, trust: false } })
+
+const defaultHtmlBlock = markdown.renderer.rules.html_block!
+markdown.renderer.rules.html_block = (tokens, index, options, environment, renderer) => {
+  // Milkdown serializes an empty paragraph as a standalone <br />.
+  return /^<br\s*\/?>(?:\s*)$/i.test(tokens[index].content.trim()) ? '<p><br></p>\n' : defaultHtmlBlock(tokens, index, options, environment, renderer)
+}
 
 const defaultFence = markdown.renderer.rules.fence!
 markdown.renderer.rules.fence = (tokens, index, options, environment, renderer) => {

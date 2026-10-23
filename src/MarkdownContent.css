@@ -1,30 +1,65 @@
-.mindflow-markdown-content { box-sizing: border-box; margin: 0; padding: 0; background: transparent; color: #1f2937; font-family: system-ui, sans-serif; font-size: 18px; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; text-align: left; }
-.mindflow-markdown-content > :first-child { margin-top: 0; }
-.mindflow-markdown-content > :last-child { margin-bottom: 0; }
-.mindflow-markdown-content p { margin: 0 0 .6em; }
-.mindflow-markdown-content h1, .mindflow-markdown-content h2, .mindflow-markdown-content h3, .mindflow-markdown-content h4, .mindflow-markdown-content h5, .mindflow-markdown-content h6 { margin: .8em 0 .4em; font-weight: 650; line-height: 1.25; }
-.mindflow-markdown-content h1 { font-size: 1.8em; }
-.mindflow-markdown-content h2 { font-size: 1.5em; }
-.mindflow-markdown-content h3 { font-size: 1.25em; }
-.mindflow-markdown-content h4, .mindflow-markdown-content h5, .mindflow-markdown-content h6 { font-size: 1em; }
-.mindflow-markdown-content a { color: #4f63bd; text-decoration: underline; }
-.mindflow-markdown-content blockquote { margin: .6em 0; padding-left: .8em; border-left: 3px solid #a7b4cc; color: inherit; }
-.mindflow-markdown-content blockquote > :last-child { margin-bottom: 0; }
-.mindflow-markdown-content ul, .mindflow-markdown-content ol { margin: .5em 0; padding-left: 1.5em; }
-.mindflow-markdown-content li { margin: .15em 0; }
-.mindflow-markdown-content li > p { margin-bottom: .25em; }
-.mindflow-markdown-content .task-list-item { list-style: none; }
-.mindflow-markdown-content .task-list-item-checkbox { width: .85em; height: .85em; margin: 0 .4em 0 -1.25em; accent-color: #6474e5; vertical-align: baseline; }
-.mindflow-markdown-content code, .mindflow-markdown-content pre { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; }
-.mindflow-markdown-content code { padding: .12em .25em; border-radius: 3px; background: #8798b21c; font-size: .88em; }
-.mindflow-markdown-content pre { margin: .65em 0; padding: .7em .8em; border: 1px solid #a7b4cc55; border-radius: 5px; background: #8798b214; white-space: pre-wrap; overflow-wrap: anywhere; }
-.mindflow-markdown-content pre code { padding: 0; background: none; }
-.mindflow-markdown-content table { width: 100%; margin: .7em 0; border-collapse: collapse; table-layout: fixed; font-size: .9em; }
-.mindflow-markdown-content th, .mindflow-markdown-content td { padding: .35em .5em; border: 1px solid #a7b4cc; vertical-align: top; overflow-wrap: anywhere; }
-.mindflow-markdown-content th { background: #8798b21c; font-weight: 650; }
-.mindflow-markdown-content hr { margin: .8em 0; border: 0; border-top: 1px solid #a7b4cc; }
-.mindflow-markdown-content img { display: block; max-width: 100%; height: auto; margin: .5em 0; object-fit: contain; }
-.mindflow-markdown-content .mindflow-image-placeholder { display: block; margin: .5em 0; padding: .6em .8em; border: 1px dashed #a7b4cc; border-radius: 4px; color: #6b7280; font-size: .85em; }
-.mindflow-markdown-content .katex { font-size: 1.1em; }
-.mindflow-markdown-content .katex-display { margin: .65em 0; }
-.mindflow-markdown-content .katex-display > .katex { max-width: 100%; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) { box-sizing: border-box; margin: 0; padding: 0; background: transparent; color: inherit; font-family: system-ui, sans-serif; font-size: inherit; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; text-align: left; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) > :first-child { margin-top: 0; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) > :last-child { margin-bottom: 0; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) p { margin: 0 0 .6em; padding: 0; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h1, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h2, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h3, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h4, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h5, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h6 { margin: .8em 0 .4em; padding: 0; font-family: inherit; font-weight: 650; line-height: 1.25; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h1 { font-size: 1.8em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h2 { font-size: 1.5em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h3 { font-size: 1.25em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h4, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h5, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) h6 { font-size: 1em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) a { color: #4f63bd; text-decoration: underline; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) blockquote { box-sizing: border-box; margin: .6em 0; padding-left: .8em; border-left: 3px solid #a7b4cc; color: inherit; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) blockquote > :last-child { margin-bottom: 0; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) ul, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) ol { margin: .5em 0; padding-left: 1.5em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) li { margin: .15em 0; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) li > p { margin-bottom: .25em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) .task-list-item { list-style: none; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) .task-list-item-checkbox { width: .85em; height: .85em; margin: 0 .4em 0 -1.25em; accent-color: #6474e5; vertical-align: baseline; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) code, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) pre { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) code { padding: .12em .25em; border-radius: 3px; background: #8798b21c; font-size: .88em; line-height: inherit; display: inline; color: inherit; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) pre { margin: .65em 0; padding: .7em .8em; border: 1px solid #a7b4cc55; border-radius: 5px; background: #8798b214; white-space: pre-wrap; overflow-wrap: anywhere; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) pre code { padding: 0; background: none; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) table { width: 100%; margin: .7em 0; border-collapse: collapse; table-layout: fixed; font-size: .9em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) th, :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) td { padding: .35em .5em; border: 1px solid #a7b4cc; vertical-align: top; overflow-wrap: anywhere; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) th { background: #8798b21c; font-weight: 650; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) hr { margin: .8em 0; border: 0; border-top: 1px solid #a7b4cc; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) img { display: block; max-width: 100%; height: auto; margin: .5em 0; object-fit: contain; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) .mindflow-image-placeholder { display: block; margin: .5em 0; padding: .6em .8em; border: 1px dashed #a7b4cc; border-radius: 4px; color: #6b7280; font-size: .85em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) .katex { font-size: 1.1em; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) .katex-display { margin: .65em 0; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) .katex-display > .katex { max-width: 100%; }
+
+/* Crepe node views share content typography; their editing controls stay outside flow. */
+.mindflow-rich-editor .milkdown .ProseMirror blockquote::before { display: none; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-table-block { margin: .63em 0; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-table-block table { margin: 0; }
+.mindflow-rich-editor .milkdown .ProseMirror :is(th, td) p { margin: 0; }
+.mindflow-rich-editor .milkdown .ProseMirror span[data-type='math_inline'] { padding: 0; color: inherit; vertical-align: baseline; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block { margin: .65em 0; padding: .7em .8em; border: 1px solid #a7b4cc55; border-radius: 5px; background: #8798b214; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .tools { position: absolute; right: 0; bottom: 100%; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .cm-editor { font-size: .88em; background: transparent; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .cm-content { padding: 0; font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; line-height: 1.5; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .cm-line { padding: 0; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .cm-scroller { font-family: inherit; line-height: inherit; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block:has(.preview .katex) { padding: 0; border: 0; background: transparent; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block:has(.preview .katex):not(.selected):not(:focus-within) .codemirror-host { display: none; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .preview-label, .mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .preview-divider { display: none; }
+
+/* Native list content DOM keeps the same tight/loose list rhythm as Markdown. */
+.mindflow-rich-editor .milkdown .ProseMirror li > div > p { margin-bottom: .25em; }
+.mindflow-rich-editor .milkdown .ProseMirror :is(ul, ol)[data-spread='false'] > li > div > p { margin: 0; }
+.mindflow-rich-editor .milkdown .ProseMirror li > input { position: absolute; margin-top: .3em; appearance: auto; }
+
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .preview { overflow: visible; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .katex-display { margin: 0; }
+
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-image-block { margin: .5em 0; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-image-block .image-wrapper { margin: 0; justify-content: flex-start; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-image-block img { min-height: 0; margin: 0; object-fit: contain; }
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-image-block .caption-input { position: absolute; top: 100%; }
+
+.mindflow-rich-editor .milkdown .ProseMirror .milkdown-code-block .cm-gutters { display: none; }
+.mindflow-markdown-content p:has(> img:only-child) { margin: .5em 0; }
+.mindflow-markdown-content p > img:only-child { margin: 0; }
+.mindflow-markdown-content > p:first-child:has(> img:only-child) { margin-top: 0; }
+.mindflow-markdown-content > p:last-child:has(> img:only-child) { margin-bottom: 0; }

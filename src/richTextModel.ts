@@ -3,6 +3,7 @@ import type { ExcalidrawElement, ExcalidrawTextElement } from '@excalidraw/excal
 import type { AppState, BinaryFiles } from '@excalidraw/excalidraw/types'
 import { collectMarkdownImageFiles, prepareMarkdownRender } from './markdownRendering'
 import { rebindRichContainers } from './richTextBridge'
+import { getStylePalette, noteColors } from './visualStyles'
 
 export type MarkdownData = { width: number; imageFiles: string[] }
 export function markdownData(text: ExcalidrawTextElement): MarkdownData | undefined {
@@ -32,8 +33,8 @@ export function richGeometry(text: ExcalidrawTextElement, elements: readonly Exc
       width: Math.max(80, (width + 32) * factor),
       height: Math.max(container.height, (height + 32) * factor),
     }
-    x = container.x + (containerSize.width - width) / 2
-    y = container.y + (containerSize.height - height) / 2
+    x = container.customData?.mindflowNote ? container.x + 16 : container.x + (containerSize.width - width) / 2
+    y = container.customData?.mindflowNote ? container.y + 16 : container.y + (containerSize.height - height) / 2
   } else if (container?.type === 'arrow') {
     x += (text.width - width) / 2
     y += (text.height - height) / 2
@@ -49,6 +50,7 @@ export async function updateMarkdownText(elements: readonly ExcalidrawElement[],
     text: source || ' ',
     autoResize: false,
     fontFamily: 2,
+    ...(elements.some(element => element.id === original.containerId && element.customData?.mindflowNote) ? { textAlign: 'left' as const, verticalAlign: 'top' as const } : {}),
     customData: { ...original.customData, mindflowMarkdown: { ...original.customData?.mindflowMarkdown, width, imageFiles: collectMarkdownImageFiles(source) } },
   })
   const measured = await prepareMarkdownRender(text, files, width)
@@ -76,14 +78,16 @@ export function createTextDraft(elements: readonly ExcalidrawElement[], target: 
   const existing = target?.type === 'text' ? target : elements.find(element => element.type === 'text' && element.containerId === target?.id && !element.isDeleted)
   if (existing?.type === 'text') return { elements, text: existing, draft: false }
   const bind = target && ['rectangle', 'ellipse', 'diamond', 'arrow'].includes(target.type) ? target : undefined
+  const note = !!bind?.customData?.mindflowNote
+  const palette = getStylePalette(bind?.customData?.mindflowStyle === 'system' || state.currentItemRoughness > 0 ? 'system' : 'modern')
   const [created] = convertToExcalidrawElements([{
     type: 'text', x: bind ? bind.x + bind.width / 2 : point.x, y: bind ? bind.y + bind.height / 2 : point.y,
-    text: ' ', fontFamily: 2, fontSize: state.currentItemFontSize,
-    strokeColor: state.currentItemStrokeColor, textAlign: bind ? 'center' : 'left',
+    text: ' ', fontFamily: 2, fontSize: note ? 16 : state.currentItemFontSize,
+    strokeColor: note ? noteColors.text : state.activeTool.type === 'text' ? state.currentItemStrokeColor : palette.text, textAlign: bind && !note ? 'center' : 'left',
   }])
   const text = newElementWith(created as ExcalidrawTextElement, {
     text: '', originalText: '', containerId: bind?.id ?? null, angle: bind?.angle ?? 0,
-    verticalAlign: bind ? 'middle' : 'top',
+    verticalAlign: bind && !note ? 'middle' : 'top',
   })
   const scene = elements.map(element => element.id === bind?.id ? newElementWith(element, {
     boundElements: [...(element.boundElements ?? []), { id: text.id, type: 'text' }],

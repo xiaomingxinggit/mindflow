@@ -36,13 +36,23 @@ let editRenderer: ((request: RichTextEditRequest) => boolean) | undefined
 let resizeRenderer: ResizeRenderer | undefined
 let redrawFrame = 0
 let nextRevision = 0
+let editingTextId: string | null = null
+let displayRevision = 0
 
 function scheduleRedraw() {
+  displayRevision += 1
   if (!redrawRenderer || redrawFrame) return
   redrawFrame = requestAnimationFrame(() => {
     redrawFrame = 0
     redrawRenderer?.()
   })
+}
+
+/** Hide only the screen copy while the live editor owns this text's display. */
+export function setEditingRichText(id: string | null) {
+  if (editingTextId === id) return
+  editingTextId = id
+  scheduleRedraw()
 }
 
 /** Cache only: the Markdown source and dimensions remain in the native scene. */
@@ -113,6 +123,7 @@ function getElementRender(element: ExcalidrawElement) {
 }
 
 export const richTextBridge = {
+  displayRevision: () => displayRevision,
   resizeBoundText(text: ExcalidrawTextElement, container: ExcalidrawTextContainer | null) {
     return resizeRenderer?.(text, container) ?? null
   },
@@ -120,9 +131,10 @@ export const richTextBridge = {
     return editRenderer?.(request) ?? false
   },
   revision(element: ExcalidrawElement) {
-    return getElementRender(element)?.revision ?? 0
+    return (getElementRender(element)?.revision ?? 0) * 2 + (element.id === editingTextId ? 1 : 0)
   },
-  drawCanvas(element: ExcalidrawElement, context: CanvasRenderingContext2D) {
+  drawCanvas(element: ExcalidrawElement, context: CanvasRenderingContext2D, isExporting = false) {
+    if (!isExporting && element.type === 'text' && element.id === editingTextId) return true
     const render = getElementRender(element)
     if (!render?.image.complete || !render.image.naturalWidth) return false
     context.drawImage(render.image, 0, 0, element.width, element.height)

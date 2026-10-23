@@ -24,6 +24,7 @@ type Options = {
   elements: readonly ExcalidrawElement[]
   appState: AppState | null
   style: CanvasStyle
+  getColors: (tool: 'line' | 'rectangle', style: CanvasStyle) => { stroke: string; background: string }
   disabled?: boolean
   onCreateDraft: (draft: QuickConnectionDraft) => void
 }
@@ -160,7 +161,7 @@ export function useQuickConnections(options: Options) {
   }
 
   function finish(current: Drag) {
-    const { api, style, onCreateDraft } = latest.current
+    const { api, style, getColors, onCreateDraft } = latest.current
     if (!api || Math.hypot(current.pointer.x - current.origin.x, current.pointer.y - current.origin.y) < minimumDrag) return
     const elements = api.getSceneElementsIncludingDeleted()
     const source = elements.find(element => element.id === current.source.id)
@@ -179,7 +180,10 @@ export function useQuickConnections(options: Options) {
       const text = additions.find(element => element.type === 'text')
       if (!target || !text) return
       textId = text.id
-      additions = additions.map(element => element.type === 'text' ? newElementWith(element, { text: '', originalText: '' }) : element)
+      const colors = getColors('rectangle', style)
+      additions = additions.map(element => element.type === 'text'
+        ? newElementWith(element, { text: '', originalText: '' })
+        : newElementWith(element, { strokeColor: colors.stroke, backgroundColor: colors.background }))
     }
     const start = ports(source).find(port => port.side === current.start.side)!
     const end = nearestPort(target as ExcalidrawFlowchartNodeElement, start)
@@ -200,7 +204,10 @@ export function useQuickConnections(options: Options) {
     // The native converter offsets bound endpoints by half a pixel but does not
     // normalize their origin. Match LinearElementEditor.getNormalizedPoints.
     const [offsetX, offsetY] = convertedArrow.points[0]
+    const colors = getColors('line', style)
     const arrow = newElementWith(convertedArrow, {
+      strokeColor: colors.stroke,
+      backgroundColor: colors.background,
       x: convertedArrow.x + offsetX,
       y: convertedArrow.y + offsetY,
       points: convertedArrow.points.map(([x, y]) => [x - offsetX, y - offsetY]) as ExcalidrawLinearElement['points'],

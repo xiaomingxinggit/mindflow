@@ -6,10 +6,10 @@ import type { AppState, BinaryFileData, BinaryFiles, ExcalidrawImperativeAPI } f
 import RichTextEditor, { RichTextWidthControl } from './RichTextEditor'
 import { contentWidth, createTextDraft, hitTextTarget, markdownData, richGeometry, updateMarkdownText } from './richTextModel'
 import { measureMarkdownResize, prepareMarkdownRender } from './markdownRendering'
-import { setRichTextEditRenderer, setRichTextPrepareRenderer, setRichTextRedrawRenderer, setRichTextResizeRenderer } from './richTextBridge'
+import { setEditingRichText, setRichTextEditRenderer, setRichTextPrepareRenderer, setRichTextRedrawRenderer, setRichTextResizeRenderer } from './richTextBridge'
 import type { QuickConnectionDraft } from './QuickConnections'
 
-type Session = { text: ExcalidrawTextElement; elements: readonly ExcalidrawElement[]; draft: boolean; connection?: QuickConnectionDraft }
+type Session = { text: ExcalidrawTextElement; elements: readonly ExcalidrawElement[]; draft: boolean; connection?: QuickConnectionDraft; caret?: { left: number; top: number } }
 type Options = { api: ExcalidrawImperativeAPI | null; elements: readonly ExcalidrawElement[]; appState: AppState | null; files: BinaryFiles }
 
 export function useRichText({ api, elements, appState, files }: Options) {
@@ -21,8 +21,33 @@ export function useRichText({ api, elements, appState, files }: Options) {
   const source = useRef('')
   const readSource = useRef<(() => string) | null>(null)
   const finishing = useRef(false)
+  const composing = useRef(false)
+  const finishAfterComposition = useRef(false)
   const sessionRef = useRef(session)
   useEffect(() => { sessionRef.current = session }, [session])
+  useEffect(() => {
+    setEditingRichText(session?.text.id ?? null)
+    return () => setEditingRichText(null)
+  }, [session?.text.id])
+
+  useEffect(() => {
+    if (!api || !session) return
+    const original = { ...api.getAppState().selectedElementIds }
+    const targetId = session.text.containerId ?? session.text.id
+    if (!original[targetId] && !original[session.text.id]) return
+    const remaining = { ...original }
+    delete remaining[targetId]
+    delete remaining[session.text.id]
+    api.updateScene({ appState: { selectedElementIds: remaining }, captureUpdate: CaptureUpdateAction.NEVER })
+    return () => {
+      const current = api.getAppState().selectedElementIds
+      // Restore only our temporary deselection. A completed edit or a new user
+      // selection already owns the native selection and must keep it.
+      const unchanged = Object.keys(current).length === Object.keys(remaining).length
+        && Object.keys(current).every(id => current[id] === remaining[id])
+      if (unchanged) api.updateScene({ appState: { selectedElementIds: original }, captureUpdate: CaptureUpdateAction.NEVER })
+    }
+  }, [api, session])
 
   useEffect(() => {
     if (!api || session) return
@@ -63,6 +88,8 @@ export function useRichText({ api, elements, appState, files }: Options) {
 
   const begin = useCallback((next: Session) => {
     if (sessionRef.current) return
+    composing.current = false
+    finishAfterComposition.current = false
     source.current = next.text.originalText
     const nextWidth = contentWidth(next.text, next.elements)
     setWidth(nextWidth)
@@ -88,11 +115,17 @@ export function useRichText({ api, elements, appState, files }: Options) {
   const finish = useCallback(async () => {
     const current = sessionRef.current
     if (!api || !current || finishing.current) return
+    if (composing.current) {
+      finishAfterComposition.current = true
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+      return
+    }
     if (pendingUploads.current) { api.setToast({ message: '图片正在插入，完成后可结束编辑' }); return }
     source.current = readSource.current?.() ?? source.current
     finishing.current = true
     setBusy(true)
     try {
+      if (!current.draft && source.current === current.text.originalText) { setSession(null); return }
       if (!source.current.trim() && current.draft) { setSession(null); return }
       const scene = current.draft ? current.elements : api.getSceneElementsIncludingDeleted()
       const updated = await updateMarkdownText(scene, current.text.id, source.current, width, api.getFiles())
@@ -125,7 +158,7 @@ export function useRichText({ api, elements, appState, files }: Options) {
     if (!point) return
     event.preventDefault()
     event.stopPropagation()
-    begin(createTextDraft(api.getSceneElementsIncludingDeleted(), hitTextTarget(elements, point), point, appState))
+    begin({ ...createTextDraft(api.getSceneElementsIncludingDeleted(), hitTextTarget(elements, point), point, api.getAppState()), caret: { left: event.clientX, top: event.clientY } })
   }
   function onPointerDownCapture(event: ReactPointerEvent<HTMLDivElement>) {
     if (!api || !appState || session || !canvasEvent(event.target) || appState.activeTool.type !== 'text' || event.button !== 0) return
@@ -133,7 +166,7 @@ export function useRichText({ api, elements, appState, files }: Options) {
     if (!point) return
     event.preventDefault()
     event.stopPropagation()
-    begin(createTextDraft(api.getSceneElementsIncludingDeleted(), hitTextTarget(elements, point), point, appState))
+    begin({ ...createTextDraft(api.getSceneElementsIncludingDeleted(), hitTextTarget(elements, point), point, api.getAppState()), caret: { left: event.clientX, top: event.clientY } })
   }
 
   const selected = elements.filter(element => !element.isDeleted && appState?.selectedElementIds[element.id])
@@ -176,12 +209,13 @@ export function useRichText({ api, elements, appState, files }: Options) {
     const container = geometry.container
     const previewSize = geometry.containerSize
     let preview = null
-    if (container && previewSize && ['rectangle', 'diamond', 'ellipse'].includes(container.type)) {
+    if (container && previewSize && ['rectangle', 'diamond', 'ellipse'].includes(container.type)
+      && (session.connection || previewSize.width !== container.width || previewSize.height !== container.height)) {
       const origin = sceneCoordsToViewportCoords({ sceneX: container.x, sceneY: container.y }, appState)
       const zoom = appState.zoom.value
       const w = previewSize.width * zoom
       const h = previewSize.height * zoom
-      const common = { fill: container.backgroundColor === 'transparent' ? '#ffffff' : container.backgroundColor, stroke: container.strokeColor, strokeWidth: container.strokeWidth, transform: `rotate(${container.angle * 180 / Math.PI} ${origin.x + w / 2} ${origin.y + h / 2})` }
+      const common = { fill: container.backgroundColor, stroke: container.strokeColor, strokeWidth: container.strokeWidth, transform: `rotate(${container.angle * 180 / Math.PI} ${origin.x + w / 2} ${origin.y + h / 2})` }
       preview = container.type === 'ellipse' ? <ellipse cx={origin.x + w / 2} cy={origin.y + h / 2} rx={w / 2} ry={h / 2} {...common} /> : container.type === 'diamond' ? <polygon points={`${origin.x + w / 2},${origin.y} ${origin.x + w},${origin.y + h / 2} ${origin.x + w / 2},${origin.y + h} ${origin.x},${origin.y + h / 2}`} {...common} /> : <rect x={origin.x} y={origin.y} width={w} height={h} rx={container.roundness ? 18 : 0} {...common} />
     }
     let linePreview = null
@@ -192,7 +226,7 @@ export function useRichText({ api, elements, appState, files }: Options) {
         linePreview = <polyline points={points} fill="none" stroke={arrow.strokeColor} strokeWidth={1.5} />
       }
     }
-    editingOverlay = <><svg className="mindflow-rich-preview">{linePreview}{preview}</svg><div className="mindflow-rich-position" style={{ left: position.x, top: position.y, transform: `rotate(${session.text.angle}rad) scale(${appState.zoom.value}) translate(-50%, -50%)` }}><RichTextEditor key={session.text.id} source={session.text.originalText} width={width} fontSize={session.text.fontSize} color={session.text.strokeColor} busy={busy} resolveImage={url => url.startsWith('mindflow-file:') ? api?.getFiles()[url.slice(14)]?.dataURL ?? '' : url} onSource={value => { source.current = value }} onHeight={setHeight} onUpload={upload} onFinish={() => void finish()} onCancel={() => setSession(null)} onReady={reader => { readSource.current = reader }} /></div></>
+    editingOverlay = <><svg className="mindflow-rich-preview">{linePreview}{preview}</svg><div className="mindflow-rich-position" style={{ left: position.x, top: position.y, transform: `rotate(${session.text.angle}rad) scale(${appState.zoom.value}) translate(-50%, -50%)` }}><RichTextEditor key={session.text.id} source={session.text.originalText} width={width} fontSize={session.text.fontSize} color={session.text.strokeColor} busy={busy} caret={session.caret} onComposition={value => { composing.current = value; if (!value && finishAfterComposition.current) { finishAfterComposition.current = false; void finish() } }} resolveImage={url => url.startsWith('mindflow-file:') ? api?.getFiles()[url.slice(14)]?.dataURL ?? '' : url} onSource={value => { source.current = value }} onHeight={setHeight} onUpload={upload} onFinish={() => void finish()} onCancel={() => setSession(null)} onReady={reader => { readSource.current = reader }} /></div></>
   }
   const controls = !session && selectedText?.type === 'text' ? <RichTextWidthControl key={`${selectedText.id}:${selectedText.width}`} width={contentWidth(selectedText, elements)} onResize={value => void resizeSelected(value)} onEdit={() => begin({ text: selectedText, elements: api?.getSceneElementsIncludingDeleted() ?? elements, draft: false })} /> : null
   return { editing: !!session, beginConnection, begin, onDoubleClickCapture, onPointerDownCapture, overlay: <>{controls}{editingOverlay}</> }

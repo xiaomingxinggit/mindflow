@@ -12,12 +12,21 @@ type StyleDefaults = Pick<AppState,
   | 'currentItemRoundness'
 >
 
-const noteColors = { background: '#fff3bf', stroke: '#e6b84c', text: '#5c4813' }
+export const noteColors = { background: '#fff3bf', stroke: '#e6b84c', text: '#5c4813' }
+
+const palettes = {
+  modern: { background: '#F5F3FF', stroke: '#9B8BC0', text: '#343044', line: '#8B819F' },
+  system: { background: '#d0ebff', stroke: '#1e1e1e', text: '#1e1e1e', line: '#1e1e1e' },
+}
+
+export function getStylePalette(style: CanvasStyle) {
+  return palettes[style]
+}
 
 export function getStyleDefaults(style: CanvasStyle): StyleDefaults {
   return {
-    currentItemStrokeColor: style === 'modern' ? '#475569' : '#1e1e1e',
-    currentItemBackgroundColor: style === 'modern' ? '#edf4ff' : '#d0ebff',
+    currentItemStrokeColor: palettes[style].stroke,
+    currentItemBackgroundColor: palettes[style].background,
     currentItemFillStyle: style === 'modern' ? 'solid' : 'hachure',
     currentItemStrokeWidth: 1,
     currentItemStrokeStyle: 'solid',
@@ -139,7 +148,7 @@ export function applyVisualStyle(elements: readonly ExcalidrawElement[], style: 
         ...base,
         fontFamily: 2,
         strokeColor: element.containerId && noteIds.has(element.containerId)
-          ? noteColors.text : style === 'modern' ? '#1f2937' : '#1e1e1e',
+          ? noteColors.text : palettes[style].text,
       })
     }
     if (element.type === 'rectangle' || element.type === 'diamond' || element.type === 'ellipse') {
@@ -152,7 +161,7 @@ export function applyVisualStyle(elements: readonly ExcalidrawElement[], style: 
           : null,
       })
     }
-    return newElementWith(element, { ...base, strokeColor: style === 'modern' ? '#64748b' : '#1e1e1e' })
+    return newElementWith(element, { ...base, strokeColor: palettes[style].line })
   })
   const layouts = measureTextLayout(styled)
   return styled.map(element => {

@@ -8,6 +8,7 @@ import type {
   LibraryItems,
 } from '@excalidraw/excalidraw/types'
 import type { CanvasStyle } from './visualStyles'
+import type { ToolColors } from './toolColors'
 
 const DATABASE_NAME = 'mindflow-whiteboard-v1'
 const STORE_NAME = 'workspace'
@@ -40,7 +41,7 @@ type ScenePreferences = Pick<
   | 'currentItemEndArrowhead'
   | 'currentItemRoundness'
   | 'currentItemArrowType'
-> & { canvasStyle?: CanvasStyle }
+> & { canvasStyle?: CanvasStyle; toolColors?: ToolColors }
 
 type StoredScene = {
   data: string
@@ -52,6 +53,7 @@ export type SceneSnapshot = {
   appState: AppState
   files: BinaryFiles
   style: CanvasStyle
+  toolColors: ToolColors
 }
 
 export type SaveStatus = 'saving' | 'saved' | 'error'
@@ -94,6 +96,7 @@ export async function loadWorkspace(): Promise<{
   scene: ExcalidrawInitialDataState | undefined
   libraryItems: LibraryItems
   style: CanvasStyle | undefined
+  toolColors: ToolColors
 }> {
   const database = await openDatabase()
   const records = await new Promise<{
@@ -114,24 +117,26 @@ export async function loadWorkspace(): Promise<{
   const storedScene = records.scene
   let scene: ExcalidrawInitialDataState | undefined
   let style: CanvasStyle | undefined
+  let toolColors: ToolColors = {}
   if (storedScene) {
     const parsed: ExportedDataState = JSON.parse(storedScene.data)
-    const { canvasStyle, ...appPreferences } = storedScene.preferences
+    const { canvasStyle, toolColors: savedColors, ...appPreferences } = storedScene.preferences
     style = canvasStyle
+    toolColors = savedColors ?? {}
     scene = {
       elements: parsed.elements,
       appState: { ...parsed.appState, ...appPreferences },
       files: parsed.files,
     }
   }
-  return { scene, libraryItems: records.libraryItems ?? [], style }
+  return { scene, libraryItems: records.libraryItems ?? [], style, toolColors }
 }
 
 export function saveLibraryItems(libraryItems: LibraryItems) {
   return writeRecord('library', libraryItems)
 }
 
-function getPreferences(appState: AppState, style: CanvasStyle): ScenePreferences {
+function getPreferences(appState: AppState, style: CanvasStyle, toolColors: ToolColors): ScenePreferences {
   return {
     name: appState.name,
     theme: appState.theme,
@@ -159,6 +164,7 @@ function getPreferences(appState: AppState, style: CanvasStyle): ScenePreference
     currentItemRoundness: appState.currentItemRoundness,
     currentItemArrowType: appState.currentItemArrowType,
     canvasStyle: style,
+    toolColors,
   }
 }
 
@@ -189,7 +195,7 @@ export function createSceneSaver(onStatus: (status: SaveStatus, error?: unknown)
       .then(async () => {
         const storedScene: StoredScene = {
           data: serializeAsJSON(snapshot.elements, snapshot.appState, snapshot.files, 'local'),
-          preferences: getPreferences(snapshot.appState, snapshot.style),
+          preferences: getPreferences(snapshot.appState, snapshot.style, snapshot.toolColors),
         }
         const signature = JSON.stringify(storedScene)
         if (signature !== savedSignature) {
@@ -210,7 +216,7 @@ export function createSceneSaver(onStatus: (status: SaveStatus, error?: unknown)
   return {
     schedule(snapshot: SceneSnapshot) {
       const sceneVersion = getSceneVersion(snapshot.elements)
-      const preferences = JSON.stringify(getPreferences(snapshot.appState, snapshot.style))
+      const preferences = JSON.stringify(getPreferences(snapshot.appState, snapshot.style, snapshot.toolColors))
       if (
         snapshot.elements === lastElements
         && sceneVersion === lastSceneVersion
