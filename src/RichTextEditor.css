@@ -1,6 +1,8 @@
 .mindflow-rich-editor { position: relative; min-height: 1.5em; background: #fff; color: #1f2937; outline: 2px solid #9382ec; border-radius: 3px; box-shadow: 0 3px 18px #30205a18; font-family: system-ui, sans-serif; }
-.mindflow-rich-editor-hint { position: absolute; bottom: calc(100% + 6px); left: 0; display: flex; align-items: center; gap: 12px; padding: 4px 8px; background: #f2efff; border-radius: 5px; color: #65538e; font: 11px system-ui, sans-serif; white-space: nowrap; }
-.mindflow-rich-upload { color: #6750a4; text-decoration: underline; cursor: pointer; }
+.mindflow-rich-upload { position: absolute; bottom: calc(100% + 6px); right: 0; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid #ddd9eb; border-radius: 5px; background: #fff; color: #6750a4; cursor: pointer; }
+.mindflow-rich-upload:hover { background: #f2efff; }
+.mindflow-rich-upload:focus-visible { outline: 2px solid #9382ec; outline-offset: 2px; }
+.mindflow-rich-upload:disabled { opacity: .5; cursor: default; }
 .mindflow-rich-editor .milkdown { --crepe-font-default: system-ui, sans-serif; --crepe-font-title: system-ui, sans-serif; --crepe-font-code: ui-monospace, monospace; background: transparent; color: inherit; font: inherit; }
 .mindflow-rich-editor .milkdown .ProseMirror { min-height: 1.5em; padding: 0; font: inherit; line-height: 1.5; overflow: visible; outline: none; }
 .mindflow-rich-editor .milkdown p { margin: 0 0 .6em; }

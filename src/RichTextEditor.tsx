@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Crepe } from '@milkdown/crepe'
 import { editorViewCtx } from '@milkdown/kit/core'
+import { ImagePlus } from 'lucide-react'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 import 'katex/dist/katex.min.css'
@@ -29,6 +30,7 @@ export function RichTextWidthControl({ width, onResize, onEdit }: { width: numbe
 /** One active ProseMirror instance; the native scene receives one final edit. */
 export default function RichTextEditor(props: Props) {
   const root = useRef<HTMLDivElement>(null)
+  const imageInput = useRef<HTMLInputElement>(null)
   const callbacks = useRef(props)
   const instance = useRef<Crepe | null>(null)
   const touched = useRef(false)
@@ -44,13 +46,12 @@ export default function RichTextEditor(props: Props) {
     const crepe = new Crepe({
       root: host,
       defaultValue: callbacks.current.source,
-      features: { [Crepe.Feature.BlockEdit]: false, [Crepe.Feature.Toolbar]: false },
+      features: { [Crepe.Feature.BlockEdit]: false, [Crepe.Feature.Toolbar]: false, [Crepe.Feature.Placeholder]: false },
       featureConfigs: {
         [Crepe.Feature.ImageBlock]: {
           onUpload: file => callbacks.current.onUpload(file),
           proxyDomURL: url => callbacks.current.resolveImage(url),
         },
-        [Crepe.Feature.Placeholder]: { text: '写下一个想法，支持 Markdown…' },
       },
     }).on(listener => listener.markdownUpdated((_ctx, markdown) => {
       if (touched.current && !cancelled) callbacks.current.onSource(markdown)
@@ -90,7 +91,8 @@ export default function RichTextEditor(props: Props) {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); props.onFinish() }
     if (event.key === 'Escape') { event.preventDefault(); props.onCancel() }
   }} style={{ width: props.width, fontSize: props.fontSize, color: props.color }}>
-    <div className="mindflow-rich-editor-hint">{props.busy ? '正在完成内容…' : <><span>Markdown · Ctrl / Cmd + Enter 完成 · Esc 取消</span><label className="mindflow-rich-upload">插入图片<input hidden type="file" accept="image/*" aria-label="插入 Markdown 图片" onChange={event => {
+    <button className="mindflow-rich-upload" type="button" aria-label="插入图片" disabled={props.busy} onPointerDown={event => event.preventDefault()} onClick={() => imageInput.current?.click()}><ImagePlus size={16} aria-hidden="true" /></button>
+    <input ref={imageInput} hidden type="file" accept="image/*" aria-label="插入 Markdown 图片" disabled={props.busy} onChange={event => {
       const file = event.target.files?.[0]
       if (!file) return
       touched.current = true
@@ -101,7 +103,7 @@ export default function RichTextEditor(props: Props) {
         view.focus()
       }))
       event.target.value = ''
-    }} /></label></>}</div>
+    }} />
     <div ref={root} />
   </div>
 }

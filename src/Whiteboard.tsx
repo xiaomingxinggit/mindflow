@@ -31,7 +31,7 @@ function DocumentName({ name, onRename }: { name: string; onRename: (name: strin
 function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
   const api = useRef<ExcalidrawImperativeAPI | null>(null)
   const [editorApi, setEditorApi] = useState<ExcalidrawImperativeAPI | null>(null)
-  const [scene, setScene] = useState<{ elements: readonly ExcalidrawElement[]; appState: AppState | null; files: BinaryFiles }>({ elements: data.elements ?? [], appState: null, files: data.files ?? {} })
+  const [scene, setScene] = useState<{ elements: readonly ExcalidrawElement[]; appState: AppState | null; files: BinaryFiles; revision: number }>({ elements: data.elements ?? [], appState: null, files: data.files ?? {}, revision: 0 })
   const sceneSignature = useRef('')
   const registerApi = useCallback((instance: ExcalidrawImperativeAPI) => { api.current = instance; setEditorApi(instance) }, [])
   const importInput = useRef<HTMLInputElement>(null)
@@ -79,7 +79,7 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
     const signature = JSON.stringify([elements.map(element => [element.id, element.versionNonce]), Object.keys(files), appState.scrollX, appState.scrollY, appState.zoom.value, appState.width, appState.height, appState.offsetLeft, appState.offsetTop, appState.selectedElementIds, appState.activeTool.type, appState.theme])
     if (signature !== sceneSignature.current) {
       sceneSignature.current = signature
-      setScene({ elements, appState, files })
+      setScene(previous => ({ elements, appState, files, revision: previous.revision + 1 }))
     }
     setName(appState.name || defaultName)
     setTheme(appState.theme)
@@ -248,7 +248,7 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
 
   return <div className={`whiteboard-shell${zen ? ' is-zen' : ''}`} data-theme={theme} onDoubleClickCapture={rich.onDoubleClickCapture} onPointerDownCapture={event => { rich.onPointerDownCapture(event); if (!event.isPropagationStopped()) quick.onPointerDownCapture(event) }} onPointerMoveCapture={quick.onPointerMoveCapture} onPointerLeave={quick.onPointerLeave}>
     {canvas}
-    <FlowAnimation api={editorApi} elements={scene.elements} appState={scene.appState} />
+    <FlowAnimation api={editorApi} elements={scene.elements} appState={scene.appState} sceneRevision={scene.revision} />
     {quick.overlay}
     {rich.overlay}
     <div className="mindflow-document" onKeyDown={event => event.stopPropagation()}>

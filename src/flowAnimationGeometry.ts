@@ -5,7 +5,9 @@ export type FlowPath = { points: Float64Array; length: number; step: number }
 
 /** Sample the pinned native renderer, so curves, elbows and rotations share its geometry. */
 export async function measureFlowPath(element: ExcalidrawLinearElement): Promise<FlowPath | null> {
-  const line = { ...element, boundElements: null, frameId: null, link: null }
+  // Copy only this changed line before awaiting the native exporter. Dragging
+  // may mutate its points while an older measurement is still in flight.
+  const line = { ...structuredClone(element), boundElements: null, frameId: null, link: null }
   const [minX, minY] = getCommonBounds([line])
   const svg = await exportToSvg({
     elements: [line], files: null, exportPadding: 0, skipInliningFonts: true,
@@ -17,7 +19,7 @@ export async function measureFlowPath(element: ExcalidrawLinearElement): Promise
   // RoughJS emits one move per sharp/elbow segment, and a second pen pass for
   // solid strokes. Keep every segment's first pass, not just the first segment.
   const strokes = (source.getAttribute('d') || '').trim().split(/(?=[Mm])/).filter(Boolean)
-  const firstPass = element.strokeStyle === 'solid' ? strokes.filter((_, index) => index % 2 === 0) : strokes
+  const firstPass = line.strokeStyle === 'solid' ? strokes.filter((_, index) => index % 2 === 0) : strokes
   if (!firstPass.length) return null
   path.setAttribute('d', firstPass.join(' '))
   let matrix = new DOMMatrix()

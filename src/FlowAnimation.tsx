@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CaptureUpdateAction, newElementWith } from '@excalidraw/excalidraw'
 import type { AppState, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types'
 import type { ExcalidrawElement, ExcalidrawLinearElement, ExcalidrawTextElement } from '@excalidraw/excalidraw/element/types'
@@ -11,6 +11,7 @@ type Props = {
   api: ExcalidrawImperativeAPI | null
   elements: readonly ExcalidrawElement[]
   appState: AppState | null
+  sceneRevision: number
 }
 type CachedPath = { key: string; path: FlowPath | null }
 const minSpeed = 20
@@ -29,7 +30,7 @@ function readFlow(element: ExcalidrawLinearElement): FlowSettings {
   }
 }
 
-export default function FlowAnimation({ api, elements, appState }: Props) {
+export default function FlowAnimation({ api, elements, appState, sceneRevision }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const cache = useRef(new Map<string, CachedPath>())
   const [draft, setDraft] = useState<{ id: string; speed: number } | null>(null)
@@ -41,9 +42,11 @@ export default function FlowAnimation({ api, elements, appState }: Props) {
   const settings = selected ? readFlow(selected) : null
   const speed = draft?.id === selected?.id ? draft?.speed : settings?.speed
 
-  useEffect(() => { current.current = { elements, appState, draft } }, [elements, appState, draft])
+  // Native drags mutate elements and reuse their array. The parent's revision
+  // records those changes even when object identity remains the same.
+  useLayoutEffect(() => { current.current = { elements, appState, draft } }, [elements, appState, draft, sceneRevision])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const alive = new Set<string>()
     for (const element of elements) {
       if (!isLine(element) || !readFlow(element).enabled) continue
@@ -52,10 +55,12 @@ export default function FlowAnimation({ api, elements, appState }: Props) {
       if (cache.current.get(element.id)?.key === key) continue
       const entry = { key, path: null } as CachedPath
       cache.current.set(element.id, entry)
-      void measureFlowPath(element).then(path => { entry.path = path }).catch(() => { entry.path = null })
+      void measureFlowPath(element).then(path => {
+        if (cache.current.get(element.id) === entry) entry.path = path
+      }).catch(() => { if (cache.current.get(element.id) === entry) entry.path = null })
     }
     for (const id of cache.current.keys()) if (!alive.has(id)) cache.current.delete(id)
-  }, [elements])
+  }, [elements, sceneRevision])
 
   useEffect(() => {
     const node = canvas.current
