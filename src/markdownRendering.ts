@@ -64,6 +64,14 @@ const remoteImages = new Map<string, Promise<string | null>>()
 const wantedKeys = new Map<string, string>()
 const pending = new Map<string, Promise<RichTextRender>>()
 const resolvedHtml = new Map<string, { source: string; html: string }>()
+const renderInputs = new Map<string, {
+  source: string
+  width: number
+  fontSize: number
+  color: string
+  images: [string, string | null][]
+  key: string
+}>()
 
 function readBlob(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -119,10 +127,21 @@ async function loadImages(host: HTMLElement, files: BinaryFiles) {
 }
 
 function renderKey(text: ExcalidrawTextElement, files: BinaryFiles, width: number): string {
-  return JSON.stringify([
-    text.originalText, width, text.fontSize, text.strokeColor,
-    collectMarkdownImageFiles(text.originalText).map(id => [id, files[id]?.dataURL ?? null]),
-  ])
+  const previous = renderInputs.get(text.id)
+  const sameSource = previous?.source === text.originalText
+  // Position changes do not change the bitmap. Check its inputs before parsing
+  // Markdown or serializing image data, including resources replaced under an ID.
+  if (previous && sameSource && previous.width === width
+    && previous.fontSize === text.fontSize && previous.color === text.strokeColor
+    && previous.images.every(([id, dataURL]) => (files[id]?.dataURL ?? null) === dataURL)) return previous.key
+
+  // Drafts can carry metadata from their previous source, so only reuse IDs
+  // collected for this exact source rather than trusting mindflowMarkdown.
+  const ids = previous && sameSource ? previous.images.map(([id]) => id) : collectMarkdownImageFiles(text.originalText)
+  const images: [string, string | null][] = ids.map(id => [id, files[id]?.dataURL ?? null])
+  const key = JSON.stringify([text.originalText, width, text.fontSize, text.strokeColor, images])
+  renderInputs.set(text.id, { source: text.originalText, width, fontSize: text.fontSize, color: text.strokeColor, images, key })
+  return key
 }
 
 function createMeasureHost(text: ExcalidrawTextElement, width: number, html: string) {

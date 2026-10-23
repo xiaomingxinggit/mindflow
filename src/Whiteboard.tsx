@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, loadFromBlob, MainMenu, newElementWith, serializeAsJSON, viewportCoordsToSceneCoords, WelcomeScreen } from '@excalidraw/excalidraw'
 import type { ExcalidrawInitialDataState, ExcalidrawImperativeAPI, ExcalidrawProps, LibraryItems } from '@excalidraw/excalidraw/types'
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
@@ -121,10 +121,10 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
     editor.updateScene({ elements: applyVisualStyle(baseline, next), appState: getStyleDefaults(next), captureUpdate: CaptureUpdateAction.IMMEDIATELY })
   }, [])
 
-  function newCanvas() {
+  const newCanvas = useCallback(() => {
     api.current?.updateScene({ elements: [], appState: { name: defaultName, selectedElementIds: {}, scrollX: 0, scrollY: 0, fileHandle: null }, captureUpdate: CaptureUpdateAction.IMMEDIATELY })
     api.current?.setActiveTool({ type: 'selection' })
-  }
+  }, [])
 
   function downloadScene() {
     const editor = api.current
@@ -212,8 +212,9 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
     { id: 'style-system', label: '统一为系统风格', onSelect: () => changeStyle('system') },
   ]
 
-  return <div className={`whiteboard-shell${zen ? ' is-zen' : ''}`} data-theme={theme} onDoubleClickCapture={rich.onDoubleClickCapture} onPointerDownCapture={event => { rich.onPointerDownCapture(event); if (!event.isPropagationStopped()) quick.onPointerDownCapture(event) }} onPointerMoveCapture={quick.onPointerMoveCapture} onPointerLeave={quick.onPointerLeave}>
-    <Excalidraw initialData={data} excalidrawAPI={registerApi} onChange={onChange} onLibraryChange={onLibraryChange}
+  // Scene positions update the overlays on every move. Keep native menu children
+  // stable so those updates do not also invalidate Excalidraw's own React memo.
+  const canvas = useMemo(() => <Excalidraw initialData={data} excalidrawAPI={registerApi} onChange={onChange} onLibraryChange={onLibraryChange}
       langCode="zh-CN" aiEnabled={false} handleKeyboardGlobally renderTopRightUI={renderExtraTools} UIOptions={{ canvasActions: { export: { saveFileToDisk: true } } }}>
       <MainMenu>
         <MainMenu.Item icon={<FilePlus2 size={16} />} onSelect={newCanvas}>新建画布</MainMenu.Item>
@@ -243,7 +244,10 @@ function Editor({ data, style: initialStyle, canSave, message }: Workspace) {
           <WelcomeScreen.Center.Menu><WelcomeScreen.Center.MenuItemLoadScene /><WelcomeScreen.Center.MenuItemHelp /></WelcomeScreen.Center.Menu>
         </WelcomeScreen.Center>
       </WelcomeScreen>
-    </Excalidraw>
+    </Excalidraw>, [data, registerApi, onChange, onLibraryChange, renderExtraTools, newCanvas, style, changeStyle])
+
+  return <div className={`whiteboard-shell${zen ? ' is-zen' : ''}`} data-theme={theme} onDoubleClickCapture={rich.onDoubleClickCapture} onPointerDownCapture={event => { rich.onPointerDownCapture(event); if (!event.isPropagationStopped()) quick.onPointerDownCapture(event) }} onPointerMoveCapture={quick.onPointerMoveCapture} onPointerLeave={quick.onPointerLeave}>
+    {canvas}
     <FlowAnimation api={editorApi} elements={scene.elements} appState={scene.appState} />
     {quick.overlay}
     {rich.overlay}
