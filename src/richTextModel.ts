@@ -2,7 +2,7 @@ import { convertToExcalidrawElements, newElementWith } from '@excalidraw/excalid
 import type { ExcalidrawElement, ExcalidrawTextElement } from '@excalidraw/excalidraw/element/types'
 import type { AppState, BinaryFiles } from '@excalidraw/excalidraw/types'
 import { collectMarkdownImageFiles, prepareMarkdownRender } from './markdownRendering'
-import { rebindRichContainers } from './richTextBridge'
+import { computeRichTextPosition, rebindRichContainers } from './richTextBridge'
 import { getStylePalette, noteColors } from './visualStyles'
 
 export type MarkdownData = { width: number; imageFiles: string[] }
@@ -33,8 +33,11 @@ export function richGeometry(text: ExcalidrawTextElement, elements: readonly Exc
       width: Math.max(80, (width + 32) * factor),
       height: Math.max(container.height, (height + 32) * factor),
     }
-    x = container.customData?.mindflowNote ? container.x + 16 : container.x + (containerSize.width - width) / 2
-    y = container.customData?.mindflowNote ? container.y + 16 : container.y + (containerSize.height - height) / 2
+    const position = container.customData?.mindflowNote
+      ? { x: container.x + 16, y: container.y + 16 }
+      : computeRichTextPosition({ ...container, ...containerSize }, { ...text, width, height }, elements)
+    x = position.x
+    y = position.y
   } else if (container?.type === 'arrow') {
     x += (text.width - width) / 2
     y += (text.height - height) / 2

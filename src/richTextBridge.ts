@@ -104,6 +104,12 @@ export function getRichTextRender(id: string) {
   return renders.get(id)
 }
 
+/** Match native bound-text alignment without mutating scene objects. */
+export function computeRichTextPosition(container: ExcalidrawTextContainer, text: ExcalidrawTextElement, elements: readonly ExcalidrawElement[]) {
+  if (!globalThis.__mindflowComputeBoundTextPosition) throw new Error('The Excalidraw bound-text layout adapter is unavailable')
+  return globalThis.__mindflowComputeBoundTextPosition(container, text, new Map(elements.map(element => [element.id, element])))
+}
+
 /** Reuses native routing on copied neighbours before one scene/history commit. */
 export function rebindRichContainers(
   elements: readonly ExcalidrawElement[],
@@ -157,6 +163,7 @@ export const richTextBridge = {
 }
 
 declare global {
+  var __mindflowComputeBoundTextPosition: ((container: ExcalidrawTextContainer, text: ExcalidrawTextElement, elementsMap: ReadonlyMap<string, ExcalidrawElement>) => { x: number; y: number }) | undefined
   var __mindflowRichText: typeof richTextBridge | undefined
   var __mindflowRebindRichContainers: ((
     elements: readonly ExcalidrawElement[],

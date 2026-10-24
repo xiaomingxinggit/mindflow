@@ -1,0 +1,12 @@
+.excalidraw .panelColumn .buttonList > .mindflow-selection-layout { order: 1; flex: 0 0 100%; min-width: 0; margin-top: 2px; color: var(--text-primary-color); font: 12px/1.4 var(--ui-font); }
+.excalidraw .buttonList .mindflow-selection-layout .mindflow-selection-layout-label { display: block; width: auto; height: auto; margin: 0 0 5px; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; cursor: default; }
+.mindflow-selection-layout-row { display: flex; align-items: center; gap: 6px; }
+.mindflow-selection-layout-value { display: flex; flex: 1; align-items: center; min-width: 0; height: 30px; padding: 0 6px; border: 1px solid var(--default-border-color); border-radius: 5px; background: var(--island-bg-color); }
+.excalidraw .mindflow-selection-layout-value input { box-sizing: border-box; width: 100%; min-width: 0; height: 28px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; }
+.mindflow-selection-layout-value > span { margin-left: 3px; color: var(--text-secondary-color); }
+.excalidraw .buttonList .mindflow-selection-layout .mindflow-selection-layout-apply { width: 44px; height: 30px; flex: 0 0 44px; padding: 0 7px; font: inherit; }
+.excalidraw .buttonList .mindflow-selection-layout button:disabled { cursor: default; opacity: .5; }
+.mindflow-selection-layout-help, .mindflow-selection-layout-status { margin: 5px 0 0; font-size: 10px; line-height: 1.4; overflow-wrap: anywhere; }
+.mindflow-selection-layout-help { color: var(--text-secondary-color); }
+.mindflow-selection-layout-status { color: var(--color-danger, #c43c53); }
+.mindflow-selection-layout-status:empty { display: none; }

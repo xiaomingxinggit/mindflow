@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
+import type { ExcalidrawTextElement } from '@excalidraw/excalidraw/element/types'
 import { Crepe } from '@milkdown/crepe'
 import { editorViewCtx, prosePluginsCtx } from '@milkdown/kit/core'
 import { EditorView as CodeEditorView } from '@codemirror/view'
@@ -16,6 +18,7 @@ type Props = {
   source: string
   width: number
   fontSize: number
+  textAlign: ExcalidrawTextElement['textAlign']
   color: string
   busy: boolean
   caret?: { left: number; top: number }
@@ -202,7 +205,7 @@ export default function RichTextEditor(props: Props) {
     }
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); props.onFinish() }
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); props.onCancel() }
-  }} style={{ width: props.width, fontSize: props.fontSize, color: props.color }}>
+  }} style={{ width: props.width, fontSize: props.fontSize, color: props.color, textAlign: props.textAlign as CSSProperties['textAlign'] }}>
     <button className="mindflow-rich-upload" type="button" aria-label="插入图片" disabled={props.busy} onPointerDown={event => event.preventDefault()} onClick={() => imageInput.current?.click()}><ImagePlus size={16} aria-hidden="true" /></button>
     <input ref={imageInput} hidden type="file" accept="image/*" aria-label="插入 Markdown 图片" disabled={props.busy} onChange={event => {
       const file = event.target.files?.[0]

@@ -10,9 +10,9 @@ import { setEditingRichText, setRichTextEditRenderer, setRichTextPrepareRenderer
 import type { QuickConnectionDraft } from './QuickConnections'
 
 type Session = { text: ExcalidrawTextElement; elements: readonly ExcalidrawElement[]; draft: boolean; connection?: QuickConnectionDraft; caret?: { left: number; top: number } }
-type Options = { api: ExcalidrawImperativeAPI | null; elements: readonly ExcalidrawElement[]; appState: AppState | null; files: BinaryFiles }
+type Options = { api: ExcalidrawImperativeAPI | null; elements: readonly ExcalidrawElement[]; appState: AppState | null; files: BinaryFiles; revision: number }
 
-export function useRichText({ api, elements, appState, files }: Options) {
+export function useRichText({ api, elements, appState, files, revision }: Options) {
   const [session, setSession] = useState<Session | null>(null)
   const [height, setHeight] = useState(30)
   const [width, setWidth] = useState(280)
@@ -84,7 +84,7 @@ export function useRichText({ api, elements, appState, files }: Options) {
     for (const element of elements) {
       if (element.type === 'text' && !element.isDeleted && markdownData(element)) void prepareMarkdownRender(element, files, element.width)
     }
-  }, [elements, files])
+  }, [elements, files, revision])
 
   const begin = useCallback((next: Session) => {
     if (sessionRef.current) return
@@ -226,7 +226,7 @@ export function useRichText({ api, elements, appState, files }: Options) {
         linePreview = <polyline points={points} fill="none" stroke={arrow.strokeColor} strokeWidth={1.5} />
       }
     }
-    editingOverlay = <><svg className="mindflow-rich-preview">{linePreview}{preview}</svg><div className="mindflow-rich-position" style={{ left: position.x, top: position.y, transform: `rotate(${session.text.angle}rad) scale(${appState.zoom.value}) translate(-50%, -50%)` }}><RichTextEditor key={session.text.id} source={session.text.originalText} width={width} fontSize={session.text.fontSize} color={session.text.strokeColor} busy={busy} caret={session.caret} onComposition={value => { composing.current = value; if (!value && finishAfterComposition.current) { finishAfterComposition.current = false; void finish() } }} resolveImage={url => url.startsWith('mindflow-file:') ? api?.getFiles()[url.slice(14)]?.dataURL ?? '' : url} onSource={value => { source.current = value }} onHeight={setHeight} onUpload={upload} onFinish={() => void finish()} onCancel={() => setSession(null)} onReady={reader => { readSource.current = reader }} /></div></>
+    editingOverlay = <><svg className="mindflow-rich-preview">{linePreview}{preview}</svg><div className="mindflow-rich-position" style={{ left: position.x, top: position.y, transform: `rotate(${session.text.angle}rad) scale(${appState.zoom.value}) translate(-50%, -50%)` }}><RichTextEditor key={session.text.id} source={session.text.originalText} width={width} fontSize={session.text.fontSize} textAlign={session.text.textAlign} color={session.text.strokeColor} busy={busy} caret={session.caret} onComposition={value => { composing.current = value; if (!value && finishAfterComposition.current) { finishAfterComposition.current = false; void finish() } }} resolveImage={url => url.startsWith('mindflow-file:') ? api?.getFiles()[url.slice(14)]?.dataURL ?? '' : url} onSource={value => { source.current = value }} onHeight={setHeight} onUpload={upload} onFinish={() => void finish()} onCancel={() => setSession(null)} onReady={reader => { readSource.current = reader }} /></div></>
   }
   const controls = !session && selectedText?.type === 'text' ? <RichTextWidthControl key={`${selectedText.id}:${selectedText.width}`} width={contentWidth(selectedText, elements)} onResize={value => void resizeSelected(value)} onEdit={() => begin({ text: selectedText, elements: api?.getSceneElementsIncludingDeleted() ?? elements, draft: false })} /> : null
   return { editing: !!session, beginConnection, begin, onDoubleClickCapture, onPointerDownCapture, overlay: <>{controls}{editingOverlay}</> }

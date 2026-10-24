@@ -1,4 +1,4 @@
-:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) { box-sizing: border-box; margin: 0; padding: 0; background: transparent; color: inherit; font-family: system-ui, sans-serif; font-size: inherit; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; text-align: left; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) { box-sizing: border-box; margin: 0; padding: 0; background: transparent; color: inherit; font-family: system-ui, sans-serif; font-size: inherit; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; text-align: inherit; }
 :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) > :first-child { margin-top: 0; }
 :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) > :last-child { margin-bottom: 0; }
 :is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) p { margin: 0 0 .6em; padding: 0; }
@@ -63,3 +63,7 @@
 .mindflow-markdown-content p > img:only-child { margin: 0; }
 .mindflow-markdown-content > p:first-child:has(> img:only-child) { margin-top: 0; }
 .mindflow-markdown-content > p:last-child:has(> img:only-child) { margin-bottom: 0; }
+
+/* Element alignment applies to prose; structured blocks retain their own layout. */
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) :is(ul, ol, pre, table, .milkdown-code-block) { text-align: left; }
+:is(.mindflow-markdown-content, .mindflow-rich-editor .milkdown .mindflow-markdown-content) :is(th, td) { text-align: inherit; }

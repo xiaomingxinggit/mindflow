@@ -181,7 +181,8 @@ export function excalidrawRichText(): Plugin {
 var rotateMultipleElements =`)
       // A short-lived map supplies native elbow routing without attaching copies
       // to the live Scene, so native mutation cannot change a prior history value.
-      code += `\nvar mindflowRichBindingElementsMap = null;
+      code += `\nglobalThis.__mindflowComputeBoundTextPosition = computeBoundTextPosition;
+var mindflowRichBindingElementsMap = null;
 globalThis.__mindflowRebindRichContainers = (elements, changedContainerIds) => {
   const originals = new Map(elements.map(element => [element.id, element]));
   const affected = new Set(changedContainerIds);
@@ -211,6 +212,57 @@ globalThis.__mindflowRebindRichContainers = (elements, changedContainerIds) => {
     for (const id of changedContainerIds) {
       const container = next.get(id);
       if (container && !container.isDeleted) updateBoundElements(container, next);
+    }
+  } finally {
+    mindflowRichBindingElementsMap = previous;
+  }
+  return elements.map(element => next.get(element.id));
+};
+globalThis.__mindflowApplyLayoutTranslations = (elements, moves) => {
+  const originals = new Map(elements.map(element => [element.id, element]));
+  const translations = new Map(moves.map(move => [move.id, move]));
+  const affected = new Set(translations.keys());
+  for (const element of elements) {
+    if (element.isDeleted || !isLinearElement(element)) continue;
+    if (translations.has(element.id) || translations.has(element.startBinding?.elementId) || translations.has(element.endBinding?.elementId)) {
+      affected.add(element.id);
+      const text = getBoundTextElement(element, originals);
+      if (text) affected.add(text.id);
+    }
+  }
+  const next = new Map(elements.map(element => [element.id,
+    affected.has(element.id) ? deepCopyElement(element) : element]));
+  for (const move of moves) {
+    const element = next.get(move.id);
+    if (element && !element.isDeleted) mutateElement(element, { x: element.x + move.dx, y: element.y + move.dy }, false);
+  }
+  // An internal connector translated with its endpoints keeps its own geometry.
+  const together = elements.filter(element => {
+    const move = translations.get(element.id);
+    return move && isLinearElement(element) && [element.startBinding, element.endBinding].every(binding => {
+      if (!binding) return true;
+      const endpoint = translations.get(binding.elementId);
+      return endpoint && Math.abs(endpoint.dx - move.dx) < 1e-7 && Math.abs(endpoint.dy - move.dy) < 1e-7;
+    });
+  }).map(element => next.get(element.id));
+  const previous = mindflowRichBindingElementsMap;
+  mindflowRichBindingElementsMap = next;
+  try {
+    for (const id of affected) {
+      const element = next.get(id);
+      if (element && isLinearElement(element) && !element.isDeleted &&
+        (element.points[0]?.[0] !== 0 || element.points[0]?.[1] !== 0)) LinearElementEditor.normalizePoints(element);
+    }
+    for (const move of moves) {
+      const element = next.get(move.id);
+      if (element && !element.isDeleted) updateBoundElements(element, next, { simultaneouslyUpdated: together });
+    }
+    for (const id of affected) {
+      const element = next.get(id);
+      if (!element || element.isDeleted) continue;
+      if (![element.x, element.y, element.width, element.height, ...(isLinearElement(element) ? element.points.flat() : [])].every(Number.isFinite)) {
+        throw new Error("Non-finite layout result");
+      }
     }
   } finally {
     mindflowRichBindingElementsMap = previous;
