@@ -1,0 +1,711 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "http://127.0.0.1:5173",
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 160,
+      "y": 130,
+      "width": 1000,
+      "height": 61,
+      "angle": 0,
+      "strokeColor": "#343044",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a0",
+      "roundness": null,
+      "seed": 1173,
+      "version": 6,
+      "versionNonce": 1539206195,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "# 把想法放到画布上",
+      "fontSize": 27,
+      "fontFamily": 2,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "# 把想法放到画布上",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 1000,
+          "imageFiles": []
+        }
+      }
+    },
+    {
+      "id": "intro",
+      "type": "text",
+      "x": 160,
+      "y": 205,
+      "width": 900,
+      "height": 29,
+      "angle": 0,
+      "strokeColor": "#343044",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a1",
+      "roundness": null,
+      "seed": 1346,
+      "version": 6,
+      "versionNonce": 382985341,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "记录灵感 · 连接关系 · 迈出下一步",
+      "fontSize": 19,
+      "fontFamily": 2,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "记录灵感 · 连接关系 · 迈出下一步",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 900,
+          "imageFiles": []
+        }
+      }
+    },
+    {
+      "id": "capture",
+      "type": "rectangle",
+      "x": 160,
+      "y": 310,
+      "width": 260,
+      "height": 150,
+      "angle": 0,
+      "strokeColor": "#9B8BC0",
+      "backgroundColor": "#F5F3FF",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a2",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1519,
+      "version": 3,
+      "versionNonce": 1546153427,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "capture-label"
+        },
+        {
+          "type": "arrow",
+          "id": "capture-connect"
+        }
+      ],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "mindflowStyle": "modern"
+      }
+    },
+    {
+      "id": "capture-label",
+      "type": "text",
+      "x": 176,
+      "y": 352.5,
+      "width": 228,
+      "height": 65,
+      "angle": 0,
+      "strokeColor": "#343044",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a3",
+      "roundness": null,
+      "seed": 1692,
+      "version": 6,
+      "versionNonce": 725372125,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "### 01　收集灵感\n\n一个问题，一张草图。",
+      "fontSize": 18,
+      "fontFamily": 2,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "capture",
+      "originalText": "### 01　收集灵感\n\n一个问题，一张草图。",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 228,
+          "imageFiles": []
+        }
+      }
+    },
+    {
+      "id": "connect",
+      "type": "rectangle",
+      "x": 600,
+      "y": 310,
+      "width": 260,
+      "height": 150,
+      "angle": 0,
+      "strokeColor": "#9B8BC0",
+      "backgroundColor": "#F5F3FF",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a4",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 1865,
+      "version": 3,
+      "versionNonce": 1864448883,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "connect-label"
+        },
+        {
+          "type": "arrow",
+          "id": "capture-connect"
+        },
+        {
+          "type": "arrow",
+          "id": "connect-act"
+        }
+      ],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "mindflowStyle": "modern"
+      }
+    },
+    {
+      "id": "connect-label",
+      "type": "text",
+      "x": 616,
+      "y": 352.5,
+      "width": 228,
+      "height": 65,
+      "angle": 0,
+      "strokeColor": "#343044",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a5",
+      "roundness": null,
+      "seed": 2038,
+      "version": 6,
+      "versionNonce": 2067310909,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "### 02　连接想法\n\n把零散线索组织起来。",
+      "fontSize": 18,
+      "fontFamily": 2,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "connect",
+      "originalText": "### 02　连接想法\n\n把零散线索组织起来。",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 228,
+          "imageFiles": []
+        }
+      }
+    },
+    {
+      "id": "act",
+      "type": "rectangle",
+      "x": 1040,
+      "y": 310,
+      "width": 260,
+      "height": 150,
+      "angle": 0,
+      "strokeColor": "#9B8BC0",
+      "backgroundColor": "#F5F3FF",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a6",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 2211,
+      "version": 3,
+      "versionNonce": 1894733075,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "act-label"
+        },
+        {
+          "type": "arrow",
+          "id": "connect-act"
+        }
+      ],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "mindflowStyle": "modern"
+      }
+    },
+    {
+      "id": "act-label",
+      "type": "text",
+      "x": 1056,
+      "y": 352.5,
+      "width": 228,
+      "height": 65,
+      "angle": 0,
+      "strokeColor": "#343044",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a7",
+      "roundness": null,
+      "seed": 2384,
+      "version": 6,
+      "versionNonce": 1479178653,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "### 03　形成行动\n\n从一个小步骤开始。",
+      "fontSize": 18,
+      "fontFamily": 2,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "act",
+      "originalText": "### 03　形成行动\n\n从一个小步骤开始。",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 228,
+          "imageFiles": []
+        }
+      }
+    },
+    {
+      "id": "capture-connect",
+      "type": "arrow",
+      "x": 426.85555616768295,
+      "y": 385,
+      "width": 166.288887664634,
+      "height": 0,
+      "angle": 0,
+      "strokeColor": "#8B819F",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a8",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 2557,
+      "version": 7,
+      "versionNonce": 1896430259,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "capture-connect-label"
+        }
+      ],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          166.288887664634,
+          0
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": {
+        "elementId": "capture",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "connect",
+        "focus": 0,
+        "gap": 8
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowFlow": {
+          "enabled": true,
+          "speed": 70
+        }
+      }
+    },
+    {
+      "id": "capture-connect-label",
+      "type": "text",
+      "x": 459.99999999999994,
+      "y": 374.5,
+      "width": 100,
+      "height": 21,
+      "angle": 0,
+      "strokeColor": "#343044",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "a9",
+      "roundness": null,
+      "seed": 2730,
+      "version": 10,
+      "versionNonce": 1799568893,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "梳理关系",
+      "fontSize": 14,
+      "fontFamily": 2,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "capture-connect",
+      "originalText": "梳理关系",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 100,
+          "imageFiles": []
+        }
+      }
+    },
+    {
+      "id": "connect-act",
+      "type": "arrow",
+      "x": 866.8555561676831,
+      "y": 385,
+      "width": 166.28888766463365,
+      "height": 5.684341886080802e-14,
+      "angle": 0,
+      "strokeColor": "#8B819F",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aA",
+      "roundness": {
+        "type": 2
+      },
+      "seed": 2903,
+      "version": 7,
+      "versionNonce": 1276472403,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "connect-act-label"
+        }
+      ],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          166.28888766463365,
+          -5.684341886080802e-14
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "startBinding": {
+        "elementId": "connect",
+        "focus": 0,
+        "gap": 8
+      },
+      "endBinding": {
+        "elementId": "act",
+        "focus": 0,
+        "gap": 8
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowFlow": {
+          "enabled": true,
+          "speed": 70
+        }
+      }
+    },
+    {
+      "id": "connect-act-label",
+      "type": "text",
+      "x": 899.9999999999999,
+      "y": 374.5,
+      "width": 100,
+      "height": 21,
+      "angle": 0,
+      "strokeColor": "#343044",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aB",
+      "roundness": null,
+      "seed": 3076,
+      "version": 10,
+      "versionNonce": 998536797,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "明确下一步",
+      "fontSize": 14,
+      "fontFamily": 2,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "connect-act",
+      "originalText": "明确下一步",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 100,
+          "imageFiles": []
+        }
+      }
+    },
+    {
+      "id": "markdown",
+      "type": "text",
+      "x": 160,
+      "y": 550,
+      "width": 610,
+      "height": 187,
+      "angle": 0,
+      "strokeColor": "#343044",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aC",
+      "roundness": null,
+      "seed": 3249,
+      "version": 6,
+      "versionNonce": 99248627,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "### 写得下完整思路\n\n在同一张画布上，写笔记，也画关系。\n\n| 内容 | 表达方式 |\n| --- | --- |\n| 计划与进度 | 任务列表、表格 |\n| 技术与推导 | 代码、公式 $E = mc^2$ |",
+      "fontSize": 18,
+      "fontFamily": 2,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "### 写得下完整思路\n\n在同一张画布上，写笔记，也画关系。\n\n| 内容 | 表达方式 |\n| --- | --- |\n| 计划与进度 | 任务列表、表格 |\n| 技术与推导 | 代码、公式 $E = mc^2$ |",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 610,
+          "imageFiles": []
+        }
+      }
+    },
+    {
+      "id": "note",
+      "type": "rectangle",
+      "x": 980,
+      "y": 550,
+      "width": 320,
+      "height": 245,
+      "angle": 0,
+      "strokeColor": "#e6b84c",
+      "backgroundColor": "#fff3bf",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aD",
+      "roundness": {
+        "type": 3
+      },
+      "seed": 3422,
+      "version": 3,
+      "versionNonce": 1941938877,
+      "isDeleted": false,
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "note-label"
+        }
+      ],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowNote": true
+      }
+    },
+    {
+      "id": "note-label",
+      "type": "text",
+      "x": 996,
+      "y": 566,
+      "width": 288,
+      "height": 144,
+      "angle": 0,
+      "strokeColor": "#5c4813",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aE",
+      "roundness": null,
+      "seed": 3595,
+      "version": 6,
+      "versionNonce": 1670296467,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1792849883126,
+      "link": null,
+      "locked": false,
+      "text": "### 今天，先做这三件事\n\n- [x] 记录一个想法\n- [x] 找到它们的联系\n- [ ] 验证最小的一步\n\n> 想清楚，然后开始。",
+      "fontSize": 16,
+      "fontFamily": 2,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": "note",
+      "originalText": "### 今天，先做这三件事\n\n- [x] 记录一个想法\n- [x] 找到它们的联系\n- [ ] 验证最小的一步\n\n> 想清楚，然后开始。",
+      "autoResize": false,
+      "lineHeight": 1.25,
+      "customData": {
+        "mindflowStyle": "modern",
+        "mindflowMarkdown": {
+          "width": 288,
+          "imageFiles": []
+        }
+      }
+    }
+  ],
+  "appState": {
+    "gridSize": 20,
+    "gridStep": 5,
+    "gridModeEnabled": false,
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}
