@@ -15,6 +15,10 @@ output/playwright
 public/excalidraw/fonts/
 *.local
 
+# Keep only the public example canvas in version control.
+/docs/examples/*
+!/docs/examples/idea-to-action.excalidraw
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
