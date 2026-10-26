@@ -8,6 +8,7 @@ import type { ExcalidrawElement, ExcalidrawTextElement } from '@excalidraw/excal
 import type { BinaryFiles } from '@excalidraw/excalidraw/types'
 import { getRichTextRender, registerRichTextRender } from './richTextBridge'
 import type { RichTextRender } from './richTextBridge'
+import { richTextContainerFactor, richTextInset } from './richTextLayout'
 import 'katex/dist/katex.min.css'
 import './MarkdownContent.css'
 
@@ -174,8 +175,8 @@ export function measureMarkdownResize(text: ExcalidrawTextElement, container: Ex
   if (container && !['rectangle', 'ellipse', 'diamond', 'arrow'].includes(container.type)) return null
   const cached = resolvedHtml.get(text.id)
   if (!cached || cached.source !== text.originalText) return null
-  const factor = container?.type === 'diamond' ? 2 : container?.type === 'ellipse' ? Math.SQRT2 : 1
-  const width = Math.max(100, Math.round(!container || container.type === 'arrow' ? text.width : container.width / factor - 32))
+  const factor = container ? richTextContainerFactor(container) : 1
+  const width = Math.max(100, Math.round(!container || container.type === 'arrow' ? text.width : container.width / factor - richTextInset))
   const host = createMeasureHost(text, width, cached.html)
   try {
     return {

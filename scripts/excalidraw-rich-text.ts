@@ -111,7 +111,7 @@ export function excalidrawRichText(): Plugin {
         '  const _files = elements.reduce((acc, element) => {\n    for (const fileId of element.customData?.mindflowMarkdown?.imageFiles || []) {\n      foundFile = true;\n      if (files?.[fileId]) acc[fileId] = files[fileId];\n    }\n    if (isInitializedImageElement(element)) {')
       code = replaceExactly(code,
         'var computeBoundTextPosition = (container, boundTextElement, elementsMap) => {',
-        'var computeBoundTextPosition = (container, boundTextElement, elementsMap) => {\n  if (container.type === "rectangle" && container.customData?.mindflowNote && boundTextElement.customData?.mindflowMarkdown) return { x: container.x + 16, y: container.y + 16 };')
+        'var computeBoundTextPosition = (container, boundTextElement, elementsMap) => {\n  const richPosition = globalThis.__mindflowRichText?.positionBoundText(container, boundTextElement);\n  if (richPosition) return richPosition;')
       code = replaceExactly(code,
         'var redrawTextBoundingBox = (textElement, container, elementsMap, informMutation = true) => {',
         `var redrawTextBoundingBox = (textElement, container, elementsMap, informMutation = true) => {
@@ -122,9 +122,9 @@ export function excalidrawRichText(): Plugin {
       if (richBounds) {
         mutateElement(textElement, richBounds, informMutation);
         if (container && !isArrowElement(container)) {
-          const factor = container.type === "diamond" ? 2 : container.type === "ellipse" ? Math.SQRT2 : 1;
-          const width = Math.max(container.width, (textElement.width + 32) * factor);
-          const height = Math.max(container.height, (textElement.height + 32) * factor);
+          const required = globalThis.__mindflowRichText?.containerSize(container, textElement);
+          const width = Math.max(container.width, required?.width ?? container.width);
+          const height = Math.max(container.height, required?.height ?? container.height);
           if (width !== container.width || height !== container.height) {
             mutateElement(container, { width, height }, informMutation);
             updateBoundElements(container, elementsMap);
@@ -147,9 +147,9 @@ export function excalidrawRichText(): Plugin {
     if (!isArrowElement(container)) {
       const richBounds = globalThis.__mindflowRichText?.resizeBoundText(textElement, container);
       if (richBounds) mutateElement(textElement, richBounds);
-      const factor = container.type === "diamond" ? 2 : container.type === "ellipse" ? Math.SQRT2 : 1;
-      const width = Math.max(container.width, ((richBounds ? 100 : textElement.width) + 32) * factor);
-      const height = Math.max(container.height, (textElement.height + 32) * factor);
+      const required = globalThis.__mindflowRichText?.containerSize(container, textElement);
+      const width = Math.max(container.width, required?.width ?? container.width);
+      const height = Math.max(container.height, required?.height ?? container.height);
       if (width !== container.width || height !== container.height) {
         mutateElement(container, { width, height });
         updateBoundElements(container, elementsMap);

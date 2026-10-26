@@ -4,6 +4,7 @@ import type { AppState, BinaryFiles } from '@excalidraw/excalidraw/types'
 import { collectMarkdownImageFiles, prepareMarkdownRender } from './markdownRendering'
 import { computeRichTextPosition, rebindRichContainers } from './richTextBridge'
 import { getStylePalette, noteColors } from './visualStyles'
+import { richTextContainerFactor, richTextContainerSize, richTextInset } from './richTextLayout'
 
 export type MarkdownData = { width: number; imageFiles: string[] }
 export function markdownData(text: ExcalidrawTextElement): MarkdownData | undefined {
@@ -15,8 +16,8 @@ export function contentWidth(text: ExcalidrawTextElement, elements: readonly Exc
   if (stored) return stored
   const container = elements.find(element => element.id === text.containerId)
   if (container && container.type !== 'arrow') {
-    const factor = container.type === 'diamond' ? 2 : container.type === 'ellipse' ? Math.SQRT2 : 1
-    return Math.max(120, Math.min(480, container.width / factor - 32))
+    const factor = richTextContainerFactor(container)
+    return Math.max(120, Math.min(480, container.width / factor - richTextInset))
   }
   return Math.max(160, Math.min(480, text.width || 280))
 }
@@ -28,14 +29,12 @@ export function richGeometry(text: ExcalidrawTextElement, elements: readonly Exc
   let y = text.y
   let containerSize: { width: number; height: number } | undefined
   if (container && (container.type === 'rectangle' || container.type === 'diamond' || container.type === 'ellipse')) {
-    const factor = container.type === 'diamond' ? 2 : container.type === 'ellipse' ? Math.SQRT2 : 1
+    const required = richTextContainerSize(container, { width, height })!
     containerSize = {
-      width: Math.max(80, (width + 32) * factor),
-      height: Math.max(container.height, (height + 32) * factor),
+      width: Math.max(80, required.width),
+      height: Math.max(container.height, required.height),
     }
-    const position = container.customData?.mindflowNote
-      ? { x: container.x + 16, y: container.y + 16 }
-      : computeRichTextPosition({ ...container, ...containerSize }, { ...text, width, height }, elements)
+    const position = computeRichTextPosition({ ...container, ...containerSize }, { ...text, width, height }, elements)
     x = position.x
     y = position.y
   } else if (container?.type === 'arrow') {

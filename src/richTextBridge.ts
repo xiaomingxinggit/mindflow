@@ -1,4 +1,5 @@
 import type { ExcalidrawElement, ExcalidrawTextContainer, ExcalidrawTextElement } from '@excalidraw/excalidraw/element/types'
+import { richTextContainerPosition, richTextContainerSize } from './richTextLayout'
 
 export type RichTextRender = {
   image: HTMLImageElement
@@ -129,6 +130,8 @@ function getElementRender(element: ExcalidrawElement) {
 }
 
 export const richTextBridge = {
+  positionBoundText: richTextContainerPosition,
+  containerSize: richTextContainerSize,
   displayRevision: () => displayRevision,
   resizeBoundText(text: ExcalidrawTextElement, container: ExcalidrawTextContainer | null) {
     return resizeRenderer?.(text, container) ?? null

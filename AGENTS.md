@@ -8,6 +8,7 @@ Mindflow 是面向个人桌面的浏览器白板，使用 React、TypeScript、V
 - `src/Whiteboard.tsx` / `.css`：原生编辑器集成、工作区界面和便签入口。
 - `src/CommandPalette.tsx` / `.css`：本地命令搜索与键盘选择。
 - `src/whiteboardStorage.ts`：IndexedDB 场景、图片、偏好和素材库保存。
+- `src/richTextLayout.ts`：富文本容器的统一内边距、形状可用区域与对齐计算。
 - `src/flowchart.ts` / `src/legacyFlowchart.ts`：旧版 JSON 校验和白板元素转换。
 - `src/index.css`：全局样式；历史、撤销与重做使用原生编辑器。
 - `public/`：静态资源；`scripts/prepare-excalidraw-assets.mjs` 自动准备本地字体。
