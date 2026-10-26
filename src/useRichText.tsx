@@ -4,9 +4,9 @@ import { CaptureUpdateAction, sceneCoordsToViewportCoords, viewportCoordsToScene
 import type { ExcalidrawElement, ExcalidrawTextElement } from '@excalidraw/excalidraw/element/types'
 import type { AppState, BinaryFileData, BinaryFiles, ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types'
 import RichTextEditor, { RichTextWidthControl } from './RichTextEditor'
-import { contentWidth, createTextDraft, hitTextTarget, markdownData, richGeometry, updateMarkdownText } from './richTextModel'
+import { contentWidth, createTextDraft, hitTextTarget, markdownData, reconcileMarkdownGeometry, richGeometry, updateMarkdownText } from './richTextModel'
 import { measureMarkdownResize, prepareMarkdownRender } from './markdownRendering'
-import { setEditingRichText, setRichTextEditRenderer, setRichTextPrepareRenderer, setRichTextRedrawRenderer, setRichTextResizeRenderer } from './richTextBridge'
+import { getRichTextRender, setEditingRichText, setRichTextEditRenderer, setRichTextPrepareRenderer, setRichTextRedrawRenderer, setRichTextResizeRenderer } from './richTextBridge'
 import type { QuickConnectionDraft } from './QuickConnections'
 
 type Session = { text: ExcalidrawTextElement; elements: readonly ExcalidrawElement[]; draft: boolean; connection?: QuickConnectionDraft; caret?: { left: number; top: number } }
@@ -81,10 +81,31 @@ export function useRichText({ api, elements, appState, files, revision }: Option
   }, [api])
 
   useEffect(() => {
-    for (const element of elements) {
-      if (element.type === 'text' && !element.isDeleted && markdownData(element)) void prepareMarkdownRender(element, files, element.width)
-    }
-  }, [elements, files, revision])
+    if (!api || session) return
+    let cancelled = false
+    const texts = elements.filter((element): element is ExcalidrawTextElement =>
+      element.type === 'text' && !element.isDeleted && !!markdownData(element))
+    void Promise.all(texts.map(async text => {
+      const versionNonce = text.versionNonce
+      const previousWidth = text.width
+      const previousHeight = text.height
+      const measured = await prepareMarkdownRender(text, files, text.width)
+      if (measured.width === previousWidth && measured.height === previousHeight) return null
+      return { id: text.id, versionNonce, ...measured }
+    })).then(measurements => {
+      if (cancelled) return
+      const mismatches = measurements.filter(measured => measured !== null)
+      if (!mismatches.length) return
+      const current = api.getSceneElementsIncludingDeleted()
+      const byId = new Map(current.map(element => [element.id, element]))
+      const fresh = mismatches.filter(measured =>
+        byId.get(measured.id)?.versionNonce === measured.versionNonce
+        && getRichTextRender(measured.id)?.key === measured.key)
+      const updated = reconcileMarkdownGeometry(current, fresh)
+      if (updated !== current) api.updateScene({ elements: updated, captureUpdate: CaptureUpdateAction.NEVER })
+    }).catch(() => api.setToast({ message: 'Markdown 内容排版失败，可继续编辑原文', closable: true }))
+    return () => { cancelled = true }
+  }, [api, elements, files, revision, session])
 
   const begin = useCallback((next: Session) => {
     if (sessionRef.current) return

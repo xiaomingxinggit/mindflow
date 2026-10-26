@@ -1,5 +1,5 @@
 import { convertToExcalidrawElements, newElementWith } from '@excalidraw/excalidraw'
-import type { ExcalidrawElement, ExcalidrawTextElement } from '@excalidraw/excalidraw/element/types'
+import type { ExcalidrawElement, ExcalidrawTextContainer, ExcalidrawTextElement } from '@excalidraw/excalidraw/element/types'
 import type { AppState, BinaryFiles } from '@excalidraw/excalidraw/types'
 import { collectMarkdownImageFiles, prepareMarkdownRender } from './markdownRendering'
 import { computeRichTextPosition, rebindRichContainers } from './richTextBridge'
@@ -73,6 +73,43 @@ export async function prepareMarkdownScene(elements: readonly ExcalidrawElement[
     result = await updateMarkdownText(result, element.id, element.originalText, contentWidth(element, result), files)
   }
   return result
+}
+
+/** Repair stale native boxes after an asynchronous Markdown measurement. */
+export function reconcileMarkdownGeometry(elements: readonly ExcalidrawElement[], measurements: readonly { id: string; width: number; height: number }[]) {
+  const byId = new Map(elements.map(element => [element.id, element]))
+  const updates = new Map<string, ExcalidrawElement>()
+  const resizedContainers = new Set<string>()
+  for (const measured of measurements) {
+    const text = byId.get(measured.id)
+    if (!text || text.type !== 'text' || text.isDeleted
+      || (text.width === measured.width && text.height === measured.height)) continue
+    const container = text.containerId ? byId.get(text.containerId) : undefined
+    const bounds = { width: measured.width, height: measured.height }
+    let position = { x: text.x, y: text.y }
+    if (container && (container.type === 'rectangle' || container.type === 'diamond' || container.type === 'ellipse' || container.type === 'arrow')) {
+      const bound = container as ExcalidrawTextContainer
+      const required = richTextContainerSize(bound, bounds)
+      const resized = required ? newElementWith(bound, {
+        width: Math.max(bound.width, required.width),
+        height: Math.max(bound.height, required.height),
+      }) : bound
+      if (resized !== bound) {
+        updates.set(resized.id, resized)
+        resizedContainers.add(resized.id)
+      }
+      position = computeRichTextPosition(resized, { ...text, ...bounds }, elements)
+    }
+    updates.set(text.id, newElementWith(text, {
+      ...position, ...bounds,
+      ...(markdownData(text)?.width !== measured.width ? {
+        customData: { ...text.customData, mindflowMarkdown: { ...markdownData(text), width: measured.width } },
+      } : {}),
+    }))
+  }
+  if (!updates.size) return elements
+  const updated = elements.map(element => updates.get(element.id) ?? element)
+  return resizedContainers.size ? rebindRichContainers(updated, [...resizedContainers]) : updated
 }
 
 /** A draft is never inserted until the first edit is accepted. */

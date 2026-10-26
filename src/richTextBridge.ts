@@ -146,7 +146,9 @@ export const richTextBridge = {
     if (!isExporting && element.type === 'text' && element.id === editingTextId) return true
     const render = getElementRender(element)
     if (!render?.image.complete || !render.image.naturalWidth) return false
-    context.drawImage(render.image, 0, 0, element.width, element.height)
+    // A pending native resize can briefly outlive its bitmap. Preserve the
+    // measured glyph proportions until scene geometry catches up.
+    context.drawImage(render.image, 0, 0, render.width, render.height)
     return true
   },
   createSvg(element: ExcalidrawTextElement, document: Document) {
@@ -154,9 +156,9 @@ export const richTextBridge = {
     if (!render) return null
     const image = document.createElementNS('http://www.w3.org/2000/svg', 'image')
     image.setAttribute('href', render.dataUrl)
-    image.setAttribute('width', String(element.width))
-    image.setAttribute('height', String(element.height))
-    image.setAttribute('preserveAspectRatio', 'none')
+    image.setAttribute('width', String(render.width))
+    image.setAttribute('height', String(render.height))
+    image.setAttribute('preserveAspectRatio', 'xMinYMin meet')
     image.setAttribute('data-mindflow-markdown', 'true')
     return image
   },

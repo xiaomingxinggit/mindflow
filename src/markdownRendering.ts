@@ -225,7 +225,9 @@ export async function prepareMarkdownRender(text: ExcalidrawTextElement, files: 
   const entryKey = `${text.id}:${key}`
   let request = pending.get(entryKey)
   if (!request) {
-    request = renderImage(text, files, width, key)
+    // Native gestures mutate live text objects while images/fonts are awaited.
+    // Freeze this request's primitive inputs so its key and measured HTML agree.
+    request = renderImage({ ...text }, files, width, key)
     pending.set(entryKey, request)
   }
   try {

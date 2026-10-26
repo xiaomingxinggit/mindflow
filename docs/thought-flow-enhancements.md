@@ -437,3 +437,48 @@ Canvas / SVG 显示出现重复内边距。无需新增存储字段；刷新恢�
 刷新恢复、SVG 导出的 22 个 Markdown 区域均通过；1280×800 和 1366×768 下无页面
 横向溢出。`npm run build`、`git diff --check` 通过；`npm run lint` 无错误，保留已有的
 `SelectionLayoutControls.tsx` 热更新导出警告，构建仍有大 chunk 提示。
+
+## 2026-10-26：修复 Markdown 字形被纵向拉长
+
+使用独立浏览器和临时中文 H1 复现了旧尺寸文件的原生「打开」路径：字号 36、文字宽度
+1000、画布缩放 100% 时，元素沿用文件中的高度 120，而离屏 Markdown 测量高度为 81，
+生成的 PNG 为 2000×162。编辑 DOM 高度约 80.98，字形正常；回到画布后，旧的
+`drawCanvas` 把位图拉满元素的 1000×120，横向比例为 1、纵向为 1.48148。
+SVG 同样使用元素宽高并设置 `preserveAspectRatio="none"`，存在相同问题。
+
+应用自己的文件准备入口会重新测量几何，但原生文件动作只恢复已有元素；常规预渲染只
+注册位图，没有把异步测量结果同步给文本框。因此位图完成后，旧高度仍然保留。
+字号或宽度刚改变、下一张位图还未完成时，也观察到了旧位图被非等比填满新框的短暂状态。
+
+本次在 `useRichText.tsx` 的预渲染完成后比较实际尺寸，仅校正不匹配的富文字。
+通过元素版本和当前缓存 key 排除过时结果；编辑会话期间不修改该会话的场景几何。
+`reconcileMarkdownGeometry` 保留独立文字位置，按统一对齐规则重新定位绑定文字，
+容器只在内容需要时扩展，并复用原生绑定重算。尺寸一致时不更新场景；校正使用
+`CaptureUpdateAction.NEVER`，不额外增加撤销步骤。位置变化继续复用位图缓存。
+
+Canvas 和 SVG 采用缓存的实际宽高，SVG 保留固有比例，避免等待新测量时拉伸旧图。
+异步渲染仅在缓存未命中时复制请求输入，防止原生就地修改元素后，测量 HTML 与缓存 key
+读取到不同的字号或原文。没有缩小既有字号或使用固定纵向缩放补偿。
+
+实际验收使用临时画布，不修改或提交私人示例：
+
+- 原生打开同一旧尺寸文件后，元素与缓存均为 1000×81，字号仍为 36；编辑高度约 80.98，
+  画布与编辑的前后截图已目视核对。一次撤销移除导入，一次重做恢复校正后的内容。
+- 实际输入 H1、中文粗体和多行正文，编辑高度约 236.48，保存向上取整为 237。
+  调宽、字号 36 / 28 切换、撤销／重做、刷新恢复后，元素与缓存宽高均一致。
+- 另核对宽度 720 → 800 的实际提交及一次撤销／重做；移动 (+40,+20) 后缓存 revision
+  保持 5。记录到的 7 次富文字位图绘制，横纵采样比例差均为 0。
+- 绑定节点文字为 372×168，容器为 420×216，四边留白均为 24；字形没有拉伸。
+- 实际导出 PNG、SVG 并目视检查。SVG 中两张文字图分别为 800×184 / 1600×368 像素，
+  以及 372×168 / 744×336 像素，均使用 `xMinYMin meet`，横纵比例差为 0。
+- 异步输入快照校验通过：请求发出后改变临时输入对象的字号、原文，已发出的请求仍按原
+  字号 28 测得高度 184，缓存 key 与测量内容一致。
+
+关键记录位于已忽略的 `output/playwright/`：`md-ratio-persist-before.log`、
+`md-ratio-verify.log`、`md-ratio-width-drag.log`、`md-ratio-import-history.log`、
+`md-ratio-export.log`。对照图为 `md-ratio-native-open-canvas-before.png`、
+`md-ratio-native-open-edit-before.png`、`md-ratio-canvas-after.png`、
+`md-ratio-edit-after.png`；实际导出为 `md-ratio-export.png` / `.svg`。
+
+最终 `npm run build`、`npm run lint`、`git diff --check` 均退出 0。保留既有的
+`SelectionLayoutControls.tsx` Fast Refresh 导出警告及构建大 chunk 提示；本轮未改动该控件。
